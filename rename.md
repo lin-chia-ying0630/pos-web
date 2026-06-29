@@ -1,81 +1,81 @@
-# POS Change Web Rename Notes
+# POS Change Web 命名整理
 
-## Naming Principle
+## 命名原則
 
-Frontend type names describe what the UI uses, not only what one API response returns. Shared payload types should not be named as one-off `Response` classes unless they truly represent the response envelope.
+前端 type 名稱要描述 UI 實際使用的資料，不只描述某一支 API 的回覆。共用 payload type 不應命名成一次性的 `Response` class，除非它真的代表回覆外層格式。
 
-## Response Envelope
+## 回覆外層
 
-Use only one response wrapper name:
+只使用一個回覆包裝名稱：
 
-- `ResponseBodyDto<T>`: backend response envelope.
+- `ResponseBodyDto<T>`：後端回覆外層。
 
-Do not wrap request payloads in `ResponseBodyDto`.
+Request payload 不要包 `ResponseBodyDto`。
 
-## Frontend Shared Types
+## 前端共用 Types
 
-Current shared UI/API payload names in `src/App.vue`:
+目前 `src/App.vue` 中的共用 UI/API payload 名稱：
 
-- `PolicyMaster`: policy master data.
-- `PolicyAddress`: policy address data.
-- `PolicyRide`: policy rider/main-ride data.
-- `CodeDescription`: code table item for change-item labels.
-- `PolicyDetail`: lookup result used by the create page and edit dialogs.
-- `ChangeCase`: newly generated case number data.
-- `PolicyChangeCase`: existing acceptance case row for query/review.
+- `PolicyMaster`：保單主檔資料。
+- `PolicyAddress`：保單地址資料。
+- `PolicyRide`：保單附約或主約附約列資料。
+- `CodeDescription`：變更項目標籤用的代碼資料。
+- `PolicyDetail`：保單查詢結果，新增頁與編輯 Dialog 共用。
+- `ChangeCase`：新產生的案號資料。
+- `PolicyChangeCase`：查詢與覆核頁使用的既有受理資料列。
 
-These names are intentionally not `*Response`, because the same data can be used by page state, dialogs, tables, and review actions.
+這些名稱刻意不使用 `*Response`，因為同一份資料會被頁面狀態、Dialog、表格與覆核動作共用。
 
-## Prior Rename Direction
+## 先前重新命名方向
 
-Backend DTO names were moved away from response-only naming. Frontend should follow the same idea:
+後端 DTO 已從 response-only 命名調整為共用命名。前端也應採用同樣概念：
 
-- Avoid `PolicyDetailResponse` in frontend state.
-- Use `PolicyDetail` for policy lookup data.
-- Avoid `CreateChangeCaseResponse` in frontend state.
-- Use `ChangeCase` for generated case data.
-- Avoid `AddressChangeResponse` when only `changedFieldCount` is needed.
-- Use an inline result type or a shared change-result type if reused later.
+- 避免在前端 state 使用 `PolicyDetailResponse`。
+- 使用 `PolicyDetail` 表示保單查詢資料。
+- 避免在前端 state 使用 `CreateChangeCaseResponse`。
+- 使用 `ChangeCase` 表示產生案號資料。
+- 只有需要 `changedFieldCount` 時，避免建立 `AddressChangeResponse`。
+- 若後續重複使用，再建立共用 change-result type。
 
-## Change Item Naming
+## 變更項目命名
 
-Business codes stay numeric in API payloads and comparisons:
+商業代碼在 API payload 與判斷中維持數字字串：
 
-- `001`: address change.
-- `002`: main policy insured amount change.
-- `003`: rider insured amount change.
+- `001`：地址變更。
+- `002`：主約保額變更。
+- `003`：附約保額變更。
 
-UI labels can be Chinese, but request payload values should remain the numeric codes.
+UI 標籤可以顯示中文，但 request payload value 應維持數字代碼。
 
-## Amount Dialog Naming
+## 保額 Dialog 命名
 
-`002` and `003` share the same amount dialog. The mode decides behavior:
+`002` 與 `003` 共用同一個保額 Dialog，由模式決定行為：
 
-- `amountDialogType = 'main'`: show master policy amount and call main amount API.
-- `amountDialogType = 'rider'`: show rider list and call rider amount API.
+- `amountDialogType = 'main'`：顯示主檔保額，並呼叫主約保額 API。
+- `amountDialogType = 'rider'`：顯示附約清單，並呼叫附約保額 API。
 
-The rider amount payload must include `rideOrder`; this is the key field used by the backend to update the correct row.
+附約保額 payload 必須包含 `rideOrder`，這是後端用來更新正確資料列的 key。
 
-## Status Naming
+## 狀態命名
 
-Acceptance status values:
+受理狀態值：
 
-- `P`: pending, shown as `P - 受理中`.
-- `S`: completed, shown as `S - 完成`.
-- `C`: cancelled, shown as `C - 取消`.
+- `P`：受理中，顯示為 `P - 受理中`。
+- `S`：完成，顯示為 `S - 完成`。
+- `C`：取消，顯示為 `C - 取消`。
 
-Only the review page should call the status update API.
+只有覆核頁應呼叫狀態更新 API。
 
-## File Ownership
+## 檔案職責
 
-- `src/App.vue`: page state, UI flow, API calls, and local TypeScript types.
-- `src/style.css`: layout and visual styling.
-- `src/main.ts`: Vue app bootstrap.
-- `vite.config.ts`: Vite and backend proxy settings.
+- `src/App.vue`：頁面狀態、UI 流程、API 呼叫與本地 TypeScript types。
+- `src/style.css`：版面與視覺樣式。
+- `src/main.ts`：Vue app bootstrap。
+- `vite.config.ts`：Vite 與後端 proxy 設定。
 
-If the app grows, split in this order:
+若應用程式後續變大，建議依序拆分：
 
-1. Move API request helper and DTO types into `src/api`.
-2. Move address dialog into a component.
-3. Move amount dialog into a component.
-4. Move review table into a component.
+1. 將 API request helper 與 DTO types 移到 `src/api`。
+2. 將地址 Dialog 拆成 component。
+3. 將保額 Dialog 拆成 component。
+4. 將覆核表格拆成 component。
