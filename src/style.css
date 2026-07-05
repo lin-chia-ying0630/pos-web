@@ -122,19 +122,22 @@ h2 {
   min-height: 44px;
   padding: 0 12px;
   text-align: left;
+  text-decoration: none;
 }
 
 .side-menu-item svg {
   color: #0f766e;
 }
 
-.side-menu-item.active {
+.side-menu-item.active,
+.side-menu-item.router-link-active {
   background: #0f766e;
   color: #fff;
   font-weight: 800;
 }
 
-.side-menu-item.active svg {
+.side-menu-item.active svg,
+.side-menu-item.router-link-active svg {
   color: #fff;
 }
 
@@ -207,6 +210,11 @@ input:focus,
 select:focus {
   border-color: #0f766e;
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+}
+
+input.invalid {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
 }
 
 .primary-button,
