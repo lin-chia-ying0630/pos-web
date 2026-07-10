@@ -249,6 +249,12 @@ export const usePosChangeStore = defineStore('posChange', {
       const content = address.fullWidthAddress || address.halfWidthAddress || '-'
       return zip ? `${zip} ${content}` : content
     },
+    saveResultMessage(label: string, changedFieldCount: number) {
+      if (changedFieldCount === 0) {
+        return `${label}資料未異動，未建立變更資料`
+      }
+      return `${label}已儲存，異動欄位 ${changedFieldCount} 筆`
+    },
     async saveAddress(payload: AddressChangePayload) {
       if (!this.policyDetail || !this.changeCase) return null
       const result = await saveAddressChange({
@@ -261,7 +267,7 @@ export const usePosChangeStore = defineStore('posChange', {
         fullWidthAddress: payload.fullWidthAddress,
         halfWidthAddress: payload.halfWidthAddress
       })
-      this.message = `地址變更已儲存，異動欄位 ${result.changedFieldCount} 筆`
+      this.message = this.saveResultMessage('地址變更', result.changedFieldCount)
       return result
     },
     async saveAddressForm() {
@@ -272,7 +278,7 @@ export const usePosChangeStore = defineStore('posChange', {
           return null
         }
         const result = await this.saveAddress(this.addressForm)
-        this.dialogMessage = `${this.addressTypeLabel(this.addressForm.addressType)} 已儲存，異動欄位 ${result?.changedFieldCount ?? 0} 筆`
+        this.dialogMessage = this.saveResultMessage(this.addressTypeLabel(this.addressForm.addressType), result?.changedFieldCount ?? 0)
         this.addressDialogOpen = false
         return result
       } catch {
@@ -288,7 +294,7 @@ export const usePosChangeStore = defineStore('posChange', {
         changeCaseNo: this.changeCase.changeCaseNo,
         masterInsuredAmount
       })
-      this.message = `主約保額變更已儲存，異動欄位 ${result.changedFieldCount} 筆`
+      this.message = this.saveResultMessage('主約保額變更', result.changedFieldCount)
       return result
     },
     async saveRiderAmounts(rides: Array<{ rideOrder: string; insuredAmount: number }>) {
@@ -299,7 +305,7 @@ export const usePosChangeStore = defineStore('posChange', {
         changeCaseNo: this.changeCase.changeCaseNo,
         rides
       })
-      this.message = `附約保額變更已儲存，異動欄位 ${result.changedFieldCount} 筆`
+      this.message = this.saveResultMessage('附約保額變更', result.changedFieldCount)
       return result
     },
     openAmountDialog(type: 'main' | 'rider') {
@@ -327,7 +333,7 @@ export const usePosChangeStore = defineStore('posChange', {
       try {
         if (this.amountDialogType === 'main') {
           const result = await this.saveMainAmount(this.amountForm.masterInsuredAmount)
-          this.dialogMessage = `主約保額變更已儲存，異動欄位 ${result?.changedFieldCount ?? 0} 筆`
+          this.dialogMessage = this.saveResultMessage('主約保額變更', result?.changedFieldCount ?? 0)
           this.amountDialogOpen = false
           return result
         }
@@ -335,7 +341,7 @@ export const usePosChangeStore = defineStore('posChange', {
           rideOrder: ride.rideOrder,
           insuredAmount: ride.insuredAmount
         })))
-        this.dialogMessage = `附約保額變更已儲存，異動欄位 ${result?.changedFieldCount ?? 0} 筆`
+        this.dialogMessage = this.saveResultMessage('附約保額變更', result?.changedFieldCount ?? 0)
         this.amountDialogOpen = false
         return result
       } catch {
