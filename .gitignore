@@ -1,6 +1,8 @@
 node_modules/
 dist/
+storybook-static/
 .vite/
+.npm-cache/
 *.tsbuildinfo
 .DS_Store
 .idea/

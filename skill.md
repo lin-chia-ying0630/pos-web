@@ -48,9 +48,9 @@
 | `findPolicyDetail` | `GET /api/policies/{policyNo}/{policySeq}` | 新增保全變更頁 | 查詢保單主檔、通訊地址、地址清單與主附約資料。 |
 | `findPostalCodeArea` | `GET /api/postal-codes/{postalCode}` | 地址變更 Dialog | 依郵遞區號前三碼或 3+3 郵遞區號帶入中文全型地址前綴與英文半形地址前綴。 |
 | `createChangeCase` | `POST /api/change-cases` | 新增保全變更頁 | 產生 P-受理中案號。 |
-| `saveAddressChange` | `POST /api/change-cases/address-change` | `001` 地址變更 Dialog | 儲存地址異動。 |
-| `saveMainAmountChange` | `POST /api/change-cases/main-amount-change` | `002` 主約保額變更 Dialog | 儲存主約保額異動。 |
-| `saveRiderAmountChange` | `POST /api/change-cases/rider-amount-change` | `003` 附約保額變更 Dialog | 儲存附約保額異動。 |
+| `saveAddressChange` | `POST /api/change-cases/{changeCaseNo}/address-change` | `001` 地址變更 Dialog | 儲存地址異動，Body 只送地址欄位。 |
+| `saveMainAmountChange` | `POST /api/change-cases/{changeCaseNo}/main-amount-change` | `002` 主約保額變更 Dialog | 儲存主約保額異動，Body 只送主檔欄位。 |
+| `saveRiderAmountChange` | `POST /api/change-cases/{changeCaseNo}/policies/{policyNo}/{policySeq}/rider-amount-change` | `003` 附約保額變更 Dialog | 儲存附約保額異動，Body 只送附約清單。 |
 | `findChangeCases` | `GET /api/policies/{policyNo}/change-cases` | 查詢保全變更頁與覆核頁 | 查詢既有受理資料。 |
 | `updateChangeCaseStatus` | `PATCH /api/change-cases/{changeCaseNo}/status` | 覆核頁 | 將 `P` 改為 `S` 或 `C`。 |
 
@@ -76,7 +76,7 @@
   - 使用者需補完整地址。
 - 使用者重新 keyin 前 3 碼時，後 3 碼與舊地址內容會先清空，再依前三碼重新帶入 code table 地址前綴。
 - 若郵遞區號 API 暫時無回應，前端可先從目前保單地址清單中相同前三碼的地址推導前綴，避免畫面空白。
-- 前端將選取的 `addressType` 與編輯後的地址欄位送到 `POST /api/change-cases/address-change`。
+- 前端將案號放在 `POST /api/change-cases/{changeCaseNo}/address-change`，Body 送選取的 `addressType` 與編輯後的地址欄位。
 - 後端判斷實際異動欄位，並回傳 `changedFieldCount`。
 
 ### 002 主約保額變更
@@ -86,7 +86,7 @@
 - 儲存成功後關閉 Dialog；儲存失敗時保留 Dialog 並顯示錯誤。
 - 保單主檔上方只顯示保單號碼、序號與總保費；主約險種、主約年期、主約保額不在主檔摘要區顯示。
 - 總保費不可在畫面直接修改。
-- 前端呼叫 `POST /api/change-cases/main-amount-change`。
+- 前端將案號放在 `POST /api/change-cases/{changeCaseNo}/main-amount-change`，Body 送 `MainPolicyMaster` 對應欄位。
 - 後端同時記錄主檔保額與對應主約附約列。
 
 ### 003 附約保額變更
@@ -94,7 +94,7 @@
 - 使用共用保額 Dialog 的 `rider` 模式。
 - Dialog 從 `rideList` 顯示附約資料，但排除 `rideType === '1'`，因為該筆代表主約。
 - 儲存成功後關閉 Dialog；儲存失敗時保留 Dialog 並顯示錯誤。
-- 前端以 `rideOrder` 傳送每筆異動附約到 `POST /api/change-cases/rider-amount-change`。
+- 前端以 `rideOrder` 傳送每筆異動附約到 `POST /api/change-cases/{changeCaseNo}/policies/{policyNo}/{policySeq}/rider-amount-change`。
 - `rideOrder` 是避免改到錯誤附約保額的 key。
 - 若後端覆核完成時主附約檔保費異動，主檔總保費由主附約檔保費加總回寫。
 

@@ -1,3 +1,5 @@
+import { request } from './httpClient'
+
 export type PolicyMaster = {
   policyNo: string
   policySeq: number
@@ -70,51 +72,29 @@ export type PostalCodeArea = {
   halfWidthAddressPrefix: string
 }
 
-type ResponseBodyDto<T> = {
-  success: boolean
-  message: string
-  massageCode: string
-  errorMessage: string
-  data: T
-}
-
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init.headers ?? {})
-    },
-    ...init
-  })
-  const body = (await response.json().catch(() => null)) as ResponseBodyDto<T> | null
-  if (!response.ok) {
-    throw new Error(body?.errorMessage || body?.message || response.statusText)
-  }
-  if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
-    return body.data
-  }
-  return body as T
-}
-
 export function findPolicyDetail(policyNo: string, policySeq: number) {
   // 畫面對應：新增保全變更頁查詢保單，顯示保單主檔、通訊地址、地址清單與主附約資料。
-  return request<PolicyDetail>(`/api/policies/${encodeURIComponent(policyNo)}/${policySeq}`)
+  return request<PolicyDetail>({
+    method: 'GET',
+    url: `/api/policies/${encodeURIComponent(policyNo)}/${policySeq}`
+  })
 }
 
 export function findPostalCodeArea(postalCode: string, timeoutMs = 2000) {
   // 畫面對應：地址變更 Dialog 的 3+3 郵遞區號查詢，帶入全型/半形地址前綴。
-  const controller = new AbortController()
-  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
-  return request<PostalCodeArea>(`/api/postal-codes/${encodeURIComponent(postalCode)}`, {
-    signal: controller.signal
-  }).finally(() => window.clearTimeout(timeoutId))
+  return request<PostalCodeArea>({
+    method: 'GET',
+    url: `/api/postal-codes/${encodeURIComponent(postalCode)}`,
+    timeout: timeoutMs
+  })
 }
 
 export function createChangeCase(policyNo: string, policySeq: number, changeItem: string) {
   // 畫面對應：新增保全變更頁「產生案號」按鈕，只取得案號，實際有異動時才存保全受理資料。
-  return request<ChangeCase>('/api/change-cases', {
+  return request<ChangeCase>({
     method: 'POST',
-    body: JSON.stringify({ policyNo, policySeq, changeItem })
+    url: '/api/change-cases',
+    data: { policyNo, policySeq, changeItem }
   })
 }
 
@@ -129,9 +109,11 @@ export function saveAddressChange(payload: {
   halfWidthAddress: string
 }) {
   // 畫面對應：001 地址變更 Dialog 儲存。
-  return request<{ changedFieldCount: number }>('/api/change-cases/address-change', {
+  const { changeCaseNo, ...address } = payload
+  return request<{ changedFieldCount: number }>({
     method: 'POST',
-    body: JSON.stringify(payload)
+    url: `/api/change-cases/${encodeURIComponent(changeCaseNo)}/address-change`,
+    data: address
   })
 }
 
@@ -142,9 +124,11 @@ export function saveMainAmountChange(payload: {
   masterInsuredAmount: number
 }) {
   // 畫面對應：002 主約保額變更 Dialog 儲存。
-  return request<{ changedFieldCount: number }>('/api/change-cases/main-amount-change', {
+  const { changeCaseNo, ...requestBody } = payload
+  return request<{ changedFieldCount: number }>({
     method: 'POST',
-    body: JSON.stringify(payload)
+    url: `/api/change-cases/${encodeURIComponent(changeCaseNo)}/main-amount-change`,
+    data: requestBody
   })
 }
 
@@ -155,15 +139,20 @@ export function saveRiderAmountChange(payload: {
   rides: Array<{ rideOrder: string; insuredAmount: number }>
 }) {
   // 畫面對應：003 附約保額變更 Dialog 儲存。
-  return request<{ changedFieldCount: number }>('/api/change-cases/rider-amount-change', {
+  const { policyNo, policySeq, changeCaseNo, rides } = payload
+  return request<{ changedFieldCount: number }>({
     method: 'POST',
-    body: JSON.stringify(payload)
+    url: `/api/change-cases/${encodeURIComponent(changeCaseNo)}/policies/${encodeURIComponent(policyNo)}/${policySeq}/rider-amount-change`,
+    data: { rides }
   })
 }
 
 export function findChangeCases(policyNo: string) {
   // 畫面對應：查詢保全變更頁與覆核頁的清單查詢。
-  return request<PolicyChangeCase[]>(`/api/policies/${encodeURIComponent(policyNo)}/change-cases`)
+  return request<PolicyChangeCase[]>({
+    method: 'GET',
+    url: `/api/policies/${encodeURIComponent(policyNo)}/change-cases`
+  })
 }
 
 export function updateChangeCaseStatus(payload: {
@@ -173,12 +162,13 @@ export function updateChangeCaseStatus(payload: {
   acceptanceStatus: 'C' | 'S'
 }) {
   // 畫面對應：覆核頁將 P-受理中案件改為 S-完成或 C-取消。
-  return request(`/api/change-cases/${encodeURIComponent(payload.changeCaseNo)}/status`, {
+  return request({
     method: 'PATCH',
-    body: JSON.stringify({
+    url: `/api/change-cases/${encodeURIComponent(payload.changeCaseNo)}/status`,
+    data: {
       policyNo: payload.policyNo,
       policySeq: payload.policySeq,
       acceptanceStatus: payload.acceptanceStatus
-    })
+    }
   })
 }
