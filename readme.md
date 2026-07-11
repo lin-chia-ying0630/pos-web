@@ -23,7 +23,7 @@ Request payload 不要包 `ResponseBodyDto`。
 - `PolicyDetail`：保單查詢結果，新增頁與編輯 Dialog 共用。
 - `ChangeCase`：新產生的案號資料。
 - `PolicyChangeCase`：查詢與覆核頁使用的既有受理資料列。
-- `PostalCodeArea`：3+3 郵遞區號查詢結果，供地址變更 Dialog 帶入全型與半形地址前綴。
+- `PostalCodeArea`：3+3 郵遞區號查詢結果，供地址變更 Dialog 帶入地址前綴。
 
 這些名稱刻意不使用 `*Response`，因為同一份資料會被頁面狀態、Dialog、表格與覆核動作共用。
 
@@ -70,10 +70,12 @@ UI 標籤可以顯示中文，但 request payload value 應維持數字代碼。
 
 ## 地址與總保費命名
 
-- `PostalCodeArea.addressPrefix`：中文全型地址前綴。
-- `PostalCodeArea.halfWidthAddressPrefix`：英文半形地址前綴。
+- `PostalCodeArea.addressPrefix`：中文地址前綴。
+- `PostalCodeArea.halfWidthAddressPrefix`：保留相容舊欄位，地址變更畫面不再寫入 `email / 電話 / 手機`。
 - 地址變更畫面郵遞區號分成 `zipCode3` 與 `zipCode2` 兩個欄位；`zipCode3` 必填 3 碼，`zipCode2` 可空白，若填寫需為 3 碼。
-- `zipCode3` 輸滿 3 碼後自動 focus `zipCode2`；`zipCode2` 輸滿 3 碼後自動 focus 地址全型。
+- `zipCode3` 輸滿 3 碼後自動 focus `zipCode2`；`zipCode2` 輸滿 3 碼後自動 focus 地址。
+- 選擇 `01/02` 時開啟郵遞區號與地址欄位，鎖住 `email / 電話 / 手機`；選擇其他地址型態時反向鎖住地址欄位。
+- 聯絡資料會優先顯示目前資料列可見的 email/電話/手機；未修改直接儲存時，後端應回傳 `changedFieldCount = 0`。
 - 重新輸入 `zipCode3` 時會清空 `zipCode2` 與舊地址內容，再依新的前三碼帶入 code table 地址前綴。
 - 若郵遞區號 API 暫時無回應，前端會嘗試由目前保單地址清單中相同 `zipCode3` 的地址推導前綴。
 - `PolicyMaster.premium`：總保費，不是可直接編輯的保費欄位。

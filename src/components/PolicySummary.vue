@@ -36,11 +36,11 @@
           <dd>01 {{ store.addressTypeLabel('01') }}</dd>
         </div>
         <div class="wide">
-          <dt>地址全型</dt>
+          <dt>地址</dt>
           <dd>{{ store.policyDetail.communicationAddress?.fullWidthAddress || '-' }}</dd>
         </div>
         <div class="wide">
-          <dt>地址半形</dt>
+          <dt>email / 電話 / 手機</dt>
           <dd>{{ store.policyDetail.communicationAddress?.halfWidthAddress || '-' }}</dd>
         </div>
       </dl>

@@ -81,7 +81,7 @@ export function findPolicyDetail(policyNo: string, policySeq: number) {
 }
 
 export function findPostalCodeArea(postalCode: string, timeoutMs = 2000) {
-  // 畫面對應：地址變更 Dialog 的 3+3 郵遞區號查詢，帶入全型/半形地址前綴。
+  // 畫面對應：地址變更 Dialog 的 3+3 郵遞區號查詢，帶入地址前綴。
   return request<PostalCodeArea>({
     method: 'GET',
     url: `/api/postal-codes/${encodeURIComponent(postalCode)}`,
@@ -103,9 +103,9 @@ export function saveAddressChange(payload: {
   policySeq: number
   changeCaseNo: string
   addressType: string
-  zipCode3: string
-  zipCode2: string
-  fullWidthAddress: string
+  zipCode3: string | null
+  zipCode2: string | null
+  fullWidthAddress: string | null
   halfWidthAddress: string
 }) {
   // 畫面對應：001 地址變更 Dialog 儲存。

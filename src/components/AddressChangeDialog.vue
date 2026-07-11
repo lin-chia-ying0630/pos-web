@@ -42,6 +42,7 @@
               :value="store.addressForm.zipCode3"
               :class="{ invalid: store.postalLookupError }"
               autocomplete="off"
+              :disabled="store.isContactAddressType(store.addressForm.addressType)"
               inputmode="numeric"
               maxlength="3"
               name="pos-zip-code3"
@@ -56,6 +57,7 @@
               :value="store.addressForm.zipCode2"
               :class="{ invalid: store.postalLookupError }"
               autocomplete="off"
+              :disabled="store.isContactAddressType(store.addressForm.addressType)"
               inputmode="numeric"
               maxlength="3"
               name="pos-zip-code2"
@@ -64,12 +66,25 @@
             />
           </label>
           <label class="wide">
-            <span>地址全型</span>
-            <input ref="fullWidthAddressInput" v-model.trim="store.addressForm.fullWidthAddress" autocomplete="off" maxlength="255" placeholder="輸入前 3 碼後帶入縣市區，再補完整地址" />
+            <span>地址</span>
+            <input
+              ref="fullWidthAddressInput"
+              v-model.trim="store.addressForm.fullWidthAddress"
+              autocomplete="off"
+              :disabled="store.isContactAddressType(store.addressForm.addressType)"
+              maxlength="255"
+              placeholder="輸入前 3 碼後帶入縣市區，再補完整地址"
+            />
           </label>
           <label class="wide">
-            <span>地址半形</span>
-            <input v-model.trim="store.addressForm.halfWidthAddress" autocomplete="off" maxlength="255" placeholder="輸入前 3 碼後帶入英文縣市區，再補完整地址" />
+            <span>email / 電話 / 手機</span>
+            <input
+              v-model.trim="store.addressForm.halfWidthAddress"
+              autocomplete="off"
+              :disabled="store.isPhysicalAddressType(store.addressForm.addressType)"
+              maxlength="255"
+              placeholder="輸入 email / 電話 / 手機"
+            />
           </label>
         </div>
 

@@ -22,6 +22,8 @@ type AddressChangePayload = {
   halfWidthAddress: string
 }
 
+const PHYSICAL_ADDRESS_TYPES = new Set(['01', '02'])
+
 type AmountRideForm = {
   rideOrder: string
   rideType: string
@@ -88,6 +90,12 @@ export const usePosChangeStore = defineStore('posChange', {
         return code?.codeDescription ?? addressType
       }
     },
+    isPhysicalAddressType() {
+      return (addressType: string) => PHYSICAL_ADDRESS_TYPES.has(addressType)
+    },
+    isContactAddressType() {
+      return (addressType: string) => !PHYSICAL_ADDRESS_TYPES.has(addressType)
+    },
     amountDialogTitle(state) {
       return state.amountDialogType === 'main' ? '主約保額變更' : '附約保額變更'
     },
@@ -153,13 +161,16 @@ export const usePosChangeStore = defineStore('posChange', {
       this.addressDialogOpen = false
     },
     selectAddress(address: PolicyAddress) {
+      const isPhysicalAddress = this.isPhysicalAddressType(address.addressType)
       this.selectedAddressType = address.addressType
       this.addressForm.addressType = address.addressType
       this.suppressPostalLookup = true
-      this.addressForm.zipCode3 = address.zipCode3 ?? ''
-      this.addressForm.zipCode2 = this.normalizeZipCode2(address.zipCode2)
-      this.addressForm.fullWidthAddress = address.fullWidthAddress ?? ''
-      this.addressForm.halfWidthAddress = address.halfWidthAddress ?? ''
+      this.addressForm.zipCode3 = isPhysicalAddress ? address.zipCode3 ?? '' : ''
+      this.addressForm.zipCode2 = isPhysicalAddress ? this.normalizeZipCode2(address.zipCode2) : ''
+      this.addressForm.fullWidthAddress = isPhysicalAddress ? address.fullWidthAddress ?? '' : ''
+      this.addressForm.halfWidthAddress = isPhysicalAddress
+        ? ''
+        : address.fullWidthAddress || address.halfWidthAddress || ''
       this.previousZipCode3 = this.addressForm.zipCode3
       this.dialogMessage = ''
       this.postalLookupError = false
@@ -169,6 +180,7 @@ export const usePosChangeStore = defineStore('posChange', {
     },
     setZipCode3(value: string) {
       if (this.suppressPostalLookup) return
+      if (this.isContactAddressType(this.addressForm.addressType)) return
       const normalizedZipCode3 = value.replace(/\D/g, '').slice(0, 3)
       this.addressForm.zipCode3 = normalizedZipCode3
       this.clearAddressWhenZipCode3Changed(normalizedZipCode3)
@@ -176,6 +188,7 @@ export const usePosChangeStore = defineStore('posChange', {
     },
     setZipCode2(value: string) {
       if (this.suppressPostalLookup) return
+      if (this.isContactAddressType(this.addressForm.addressType)) return
       const normalizedZipCode2 = value.replace(/\D/g, '').slice(0, 3)
       this.addressForm.zipCode2 = normalizedZipCode2
       return this.lookupWhenPostalCodeReady()
@@ -185,11 +198,11 @@ export const usePosChangeStore = defineStore('posChange', {
       this.previousZipCode3 = zipCode3
       this.addressForm.zipCode2 = ''
       this.addressForm.fullWidthAddress = ''
-      this.addressForm.halfWidthAddress = ''
       this.dialogMessage = ''
       this.postalLookupError = false
     },
     async lookupWhenPostalCodeReady() {
+      if (this.isContactAddressType(this.addressForm.addressType)) return
       if (this.addressForm.zipCode3.length < 3 || (this.addressForm.zipCode2.length > 0 && this.addressForm.zipCode2.length < 3)) {
         this.postalLookupError = false
         return
@@ -203,15 +216,13 @@ export const usePosChangeStore = defineStore('posChange', {
         const area = await findPostalCodeArea(postalCode)
         if (this.latestPostalLookupKey !== postalCode) return
         this.addressForm.fullWidthAddress = area.addressPrefix
-        this.addressForm.halfWidthAddress = area.halfWidthAddressPrefix
-        this.dialogMessage = `已帶入 ${area.addressPrefix} / ${area.halfWidthAddressPrefix}，請重新輸入後續地址`
+        this.dialogMessage = `已帶入 ${area.addressPrefix}，請重新輸入後續地址`
       } catch (error) {
         const fallback = this.resolvePostalPrefixFromPolicyAddress(postalCode.slice(0, 3))
         if (fallback) {
           this.addressForm.fullWidthAddress = fallback.addressPrefix
-          this.addressForm.halfWidthAddress = fallback.halfWidthAddressPrefix
           this.postalLookupError = false
-          this.dialogMessage = `已帶入 ${fallback.addressPrefix} / ${fallback.halfWidthAddressPrefix}，請重新輸入後續地址`
+          this.dialogMessage = `已帶入 ${fallback.addressPrefix}，請重新輸入後續地址`
           return
         }
         if (this.latestPostalLookupKey !== postalCode) return
@@ -257,14 +268,15 @@ export const usePosChangeStore = defineStore('posChange', {
     },
     async saveAddress(payload: AddressChangePayload) {
       if (!this.policyDetail || !this.changeCase) return null
+      const isPhysicalAddress = this.isPhysicalAddressType(payload.addressType)
       const result = await saveAddressChange({
         policyNo: this.policyDetail.master.policyNo,
         policySeq: this.policyDetail.master.policySeq,
         changeCaseNo: this.changeCase.changeCaseNo,
         addressType: payload.addressType,
-        zipCode3: payload.zipCode3,
-        zipCode2: payload.zipCode2,
-        fullWidthAddress: payload.fullWidthAddress,
+        zipCode3: isPhysicalAddress ? payload.zipCode3 : '',
+        zipCode2: isPhysicalAddress ? payload.zipCode2 : '',
+        fullWidthAddress: isPhysicalAddress ? payload.fullWidthAddress : '',
         halfWidthAddress: payload.halfWidthAddress
       })
       this.message = this.saveResultMessage('地址變更', result.changedFieldCount)
@@ -272,9 +284,18 @@ export const usePosChangeStore = defineStore('posChange', {
     },
     async saveAddressForm() {
       try {
-        if (this.addressForm.zipCode3.length !== 3 || (this.addressForm.zipCode2.length > 0 && this.addressForm.zipCode2.length !== 3)) {
-          this.postalLookupError = true
-          this.dialogMessage = '郵遞區號前三碼必填，後三碼可空白；若填寫需為 3 碼'
+        if (this.isPhysicalAddressType(this.addressForm.addressType)) {
+          if (this.addressForm.zipCode3.length !== 3 || (this.addressForm.zipCode2.length > 0 && this.addressForm.zipCode2.length !== 3)) {
+            this.postalLookupError = true
+            this.dialogMessage = '郵遞區號前三碼必填，後三碼可空白；若填寫需為 3 碼'
+            return null
+          }
+          if (!this.addressForm.fullWidthAddress.trim()) {
+            this.dialogMessage = '地址不可空白'
+            return null
+          }
+        } else if (!this.addressForm.halfWidthAddress.trim()) {
+          this.dialogMessage = 'email / 電話 / 手機不可空白'
           return null
         }
         const result = await this.saveAddress(this.addressForm)

@@ -46,7 +46,7 @@
 | 前端 API wrapper | 後端 API | 對應畫面 | 用途 |
 | --- | --- | --- | --- |
 | `findPolicyDetail` | `GET /api/policies/{policyNo}/{policySeq}` | 新增保全變更頁 | 查詢保單主檔、通訊地址、地址清單與主附約資料。 |
-| `findPostalCodeArea` | `GET /api/postal-codes/{postalCode}` | 地址變更 Dialog | 依郵遞區號前三碼或 3+3 郵遞區號帶入中文全型地址前綴與英文半形地址前綴。 |
+| `findPostalCodeArea` | `GET /api/postal-codes/{postalCode}` | 地址變更 Dialog | 依郵遞區號前三碼或 3+3 郵遞區號帶入中文地址前綴。 |
 | `createChangeCase` | `POST /api/change-cases` | 新增保全變更頁 | 產生 P-受理中案號。 |
 | `saveAddressChange` | `POST /api/change-cases/{changeCaseNo}/address-change` | `001` 地址變更 Dialog | 儲存地址異動，Body 只送地址欄位。 |
 | `saveMainAmountChange` | `POST /api/change-cases/{changeCaseNo}/main-amount-change` | `002` 主約保額變更 Dialog | 儲存主約保額異動，Body 只送主檔欄位。 |
@@ -68,11 +68,13 @@
 - Dialog 顯示該保單關聯的所有地址資料，不限定固定三筆。
 - 使用者先選擇一筆資料再修改。
 - 儲存成功後關閉 Dialog；儲存失敗時保留 Dialog 並顯示錯誤。
+- 選擇 `01/02` 時開啟郵遞區號與地址欄位，鎖住 `email / 電話 / 手機`。
+- 選擇其他地址型態時開啟 `email / 電話 / 手機`，鎖住郵遞區號與地址欄位。
+- 聯絡資料會優先顯示目前資料列可見的 email/電話/手機；未修改直接儲存時，後端應回傳 `changedFieldCount = 0`。
 - 郵遞區號畫面分成前 3 碼與後 3 碼兩個欄位，前三碼必填，後三碼可空白。
-- 郵遞區號前 3 碼輸滿後自動跳到後 3 碼；後 3 碼輸滿後自動跳到地址全型。
+- 郵遞區號前 3 碼輸滿後自動跳到後 3 碼；後 3 碼輸滿後自動跳到地址。
 - 3+3 郵遞區號查詢後：
-  - 地址全型帶入中文縣市區。
-  - 地址半形帶入英文縣市區。
+  - 地址帶入中文縣市區。
   - 使用者需補完整地址。
 - 使用者重新 keyin 前 3 碼時，後 3 碼與舊地址內容會先清空，再依前三碼重新帶入 code table 地址前綴。
 - 若郵遞區號 API 暫時無回應，前端可先從目前保單地址清單中相同前三碼的地址推導前綴，避免畫面空白。
