@@ -40,8 +40,6 @@ services:
   pos-web:
     build:
       context: .
-      args:
-        VITE_API_SECURITY_ENABLED: ${POS_SECURITY_ENABLED:-false}
     ports:
       - '${WEB_PORT:-8080}:80'
     depends_on:

@@ -14,6 +14,13 @@
 
       <div class="work-layout" :class="{ 'login-layout': route.name === 'login' }">
         <aside v-if="route.name !== 'login'" class="side-menu">
+          <div class="account-summary" data-testid="account-summary">
+            <UserRound :size="20" />
+            <span>
+              <strong>{{ authStore.displayName }}</strong>
+              <small>{{ authStore.roleDescription }}</small>
+            </span>
+          </div>
           <RouterLink v-if="authStore.hasRole('MAKER')" class="side-menu-item" to="/change/create">
             <Plus :size="18" />
             <span>新增保全變更</span>
@@ -26,7 +33,12 @@
             <FileText :size="18" />
             <span>覆核</span>
           </RouterLink>
-          <button v-if="authStore.securityRequired" class="side-menu-item" type="button" @click="logout">
+          <button
+            v-if="authStore.securityRequired && authStore.authenticated"
+            class="side-menu-item"
+            type="button"
+            @click="logout"
+          >
             <LogOut :size="18" />
             <span>登出</span>
           </button>
@@ -41,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { FileText, LogOut, Plus, Search } from '@lucide/vue'
+import { FileText, LogOut, Plus, Search, UserRound } from '@lucide/vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import { useChangeCaseStore } from './stores/changeCaseStore'

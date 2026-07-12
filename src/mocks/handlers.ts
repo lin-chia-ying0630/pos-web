@@ -3,6 +3,19 @@ import { mockChangeCaseDetail, mockChangeCases, mockPolicyDetail } from '../stor
 
 // MSW handlers 同時供 Vitest 與 Storybook 使用，讓前端可在無後端時驗證畫面狀態。
 export const handlers = [
+  http.get('/api/auth/me', () => {
+    return HttpResponse.json({
+      success: true,
+      message: '執行成功',
+      massageCode: '',
+      errorMessage: '',
+      data: {
+        username: 'local-development',
+        roles: ['MAKER', 'REVIEWER'],
+        securityEnabled: false
+      }
+    })
+  }),
   http.get('/api/policies/:policyNo/change-cases', () => {
     return HttpResponse.json({
       success: true,

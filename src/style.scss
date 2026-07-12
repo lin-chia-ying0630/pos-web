@@ -123,6 +123,12 @@ h2 {
   margin: 4px 0 0;
 }
 
+.login-hint {
+  color: #647281;
+  line-height: 1.6;
+  margin: 8px 0 0;
+}
+
 .login-form label {
   display: grid;
   gap: 6px;
@@ -137,6 +143,37 @@ h2 {
   padding: 8px;
   position: sticky;
   top: 16px;
+}
+
+.account-summary {
+  align-items: center;
+  border-bottom: 1px solid #edf0f3;
+  color: #374151;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 2px;
+  min-width: 0;
+  padding: 8px 12px 12px;
+}
+
+.account-summary > svg {
+  color: #0f766e;
+  flex: 0 0 auto;
+}
+
+.account-summary span {
+  display: grid;
+  min-width: 0;
+}
+
+.account-summary strong,
+.account-summary small {
+  overflow-wrap: anywhere;
+}
+
+.account-summary small {
+  color: #647281;
+  margin-top: 2px;
 }
 
 .side-menu-item {
@@ -666,6 +703,10 @@ h3 {
   .side-menu {
     grid-template-columns: 1fr 1fr;
     position: static;
+  }
+
+  .account-summary {
+    grid-column: 1 / -1;
   }
 
   .query-panel,

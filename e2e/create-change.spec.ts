@@ -22,6 +22,13 @@ async function mockApi(page: Page) {
   await page.route('http://127.0.0.1:5173/api/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
+    if (request.method() === 'GET' && url.pathname === '/api/auth/me') {
+      return json(route, {
+        username: 'local-development',
+        roles: ['MAKER', 'REVIEWER'],
+        securityEnabled: false
+      })
+    }
     if (request.method() === 'GET' && url.pathname === '/api/policies/P000000001/1') {
       return json(route, mockPolicyDetail)
     }
@@ -105,4 +112,43 @@ test('requires review detail before completing a case', async ({ page }) => {
   page.once('dialog', (dialog) => dialog.accept())
   await page.getByRole('button', { name: '確認完成' }).click()
   await expect(page.getByText(`${changeCaseNo} 已完成並套用異動`)).toBeVisible()
+})
+
+test('redirects to login and shows the authenticated role when backend security is enabled', async ({ page }) => {
+  await page.unroute('http://127.0.0.1:5173/api/**')
+  await page.route('http://127.0.0.1:5173/api/**', async (route) => {
+    const request = route.request()
+    const url = new URL(request.url())
+    if (request.method() === 'GET' && url.pathname === '/api/auth/me') {
+      if (
+        request.headers()['authorization'] === `Basic ${Buffer.from('reviewer:reviewer-secret').toString('base64')}`
+      ) {
+        return json(route, { username: 'reviewer', roles: ['REVIEWER'], securityEnabled: true })
+      }
+      return route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          message: '',
+          massageCode: '',
+          errorMessage: '尚未登入或帳號密碼錯誤',
+          data: null
+        })
+      })
+    }
+    await route.abort()
+  })
+
+  await page.goto('/change/review')
+  await expect(page).toHaveURL(/\/login$/)
+  await page.getByLabel('帳號').fill('reviewer')
+  await page.getByLabel('密碼').fill('reviewer-secret')
+  await page.getByRole('button', { name: '登入' }).click()
+
+  await expect(page).toHaveURL(/\/change\/review$/)
+  const accountSummary = page.getByTestId('account-summary')
+  await expect(accountSummary.getByText('reviewer', { exact: true })).toBeVisible()
+  await expect(accountSummary.getByText('覆核', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: '新增保全變更' })).toHaveCount(0)
 })

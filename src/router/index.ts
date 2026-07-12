@@ -18,8 +18,9 @@ export const router = createRouter({
 })
 
 export function installAuthGuard(pinia: Pinia) {
-  router.beforeEach((to) => {
+  router.beforeEach(async (to) => {
     const authStore = useAuthStore(pinia)
+    await authStore.initialize()
     if (!authStore.securityRequired) {
       return to.name === 'login' ? '/change/create' : true
     }

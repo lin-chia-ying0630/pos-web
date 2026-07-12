@@ -9,6 +9,20 @@ export type ResponseBodyDto<T> = {
   data: T
 }
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status?: number
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError
+}
+
 export const httpClient = axios.create({
   headers: {
     'Content-Type': 'application/json'
@@ -33,7 +47,7 @@ export async function request<T>(config: AxiosRequestConfig): Promise<T> {
   } catch (error) {
     if (error instanceof AxiosError) {
       const body = error.response?.data as Partial<ResponseBodyDto<unknown>> | undefined
-      throw new Error(body?.errorMessage || body?.message || resolveAxiosErrorMessage(error))
+      throw new ApiError(body?.errorMessage || body?.message || resolveAxiosErrorMessage(error), error.response?.status)
     }
     throw error
   }

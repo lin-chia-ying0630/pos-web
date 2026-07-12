@@ -27,12 +27,13 @@ flowchart LR
 
 ### 登入與角色
 
-正式環境開啟後端 Security 時，前端會先顯示登入頁：
+前端每次開啟或重新整理時呼叫 `GET /api/auth/me`，依後端實際回覆判斷安全模式；不再使用建置時旗標。後端回覆 `401` 時會自動導向登入頁：
 
 - `MAKER`：新增、查詢與儲存保全變更。
 - `REVIEWER`：查詢案件明細並完成或取消案件。
 - 帳號密碼只保留在目前瀏覽器記憶體，重新整理後需重新登入。
-- 本機 `VITE_API_SECURITY_ENABLED=false` 時不顯示登入頁，方便開發與 Storybook 驗證。
+- 後端關閉 Security 時回傳 `local-development`，畫面顯示「本機開發模式／經辦與覆核」。
+- 左側選單固定顯示目前使用者與中文角色；不同角色只看到可執行功能。
 
 ### 左側選單
 
@@ -319,7 +320,7 @@ flowchart TD
 - `src/App.vue`：外層版面、左側選單與 `<RouterView />`。
 - `src/router/index.ts`：前端路由定義。
 - `src/stores/workflowStore.ts`：共用 loading 與訊息狀態。
-- `src/stores/authStore.ts`：登入與角色權限。
+- `src/stores/authStore.ts`：啟動時偵測後端安全模式、登入與角色權限。
 - `src/stores/policyStore.ts`：保單資料與查詢條件。
 - `src/stores/changeCaseStore.ts`：案號、清單、覆核明細與狀態。
 - `src/stores/addressChangeStore.ts`：001 地址／聯絡資料表單。
@@ -347,6 +348,8 @@ flowchart TD
 1. `node:24-alpine` 執行 `npm ci` 與 `npm run build`。
 2. `nginx:1.29-alpine` 提供靜態檔案。
 3. `nginx.conf` 將 `/api/` 代理到 `http://pos-change-api:8081/api/`。
+
+Security 模式由執行中的後端決定，同一份前端 image 可搭配開啟或關閉 Security 的 API，不需要為權限模式重新 build。
 
 建置 image：
 

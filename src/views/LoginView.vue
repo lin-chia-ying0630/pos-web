@@ -4,6 +4,7 @@
       <div>
         <p class="eyebrow">POS Security</p>
         <h2>登入保全變更作業</h2>
+        <p class="login-hint">請使用經辦或覆核帳號登入，系統會依角色顯示可執行功能。</p>
       </div>
       <label>
         <span>帳號</span>
@@ -36,7 +37,16 @@ const router = useRouter()
 const form = reactive({ username: '', password: '' })
 
 async function login() {
-  const user = await authStore.login(form.username, form.password)
-  await router.push(user.roles.includes('MAKER') ? '/change/create' : '/change/review')
+  try {
+    const user = await authStore.login(form.username, form.password)
+    const target = user.roles.includes('MAKER')
+      ? '/change/create'
+      : user.roles.includes('REVIEWER')
+        ? '/change/review'
+        : '/change/query'
+    await router.push(target)
+  } catch {
+    // workflowStore 已顯示後端回傳的登入錯誤，保留表單讓使用者修正。
+  }
 }
 </script>
