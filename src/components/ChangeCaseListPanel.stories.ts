@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import ChangeCaseListPanel from './ChangeCaseListPanel.vue'
-import { usePosChangeStore } from '../stores/posChangeStore'
+import { useChangeCaseStore } from '../stores/changeCaseStore'
+import { usePolicyStore } from '../stores/policyStore'
 import { mockChangeCases } from '../stories/mockData'
 
 const meta = {
@@ -18,8 +19,10 @@ export const QueryMode: Story = {
   render: (args) => ({
     components: { ChangeCaseListPanel },
     setup() {
-      const store = usePosChangeStore()
-      store.$patch({ changeCases: mockChangeCases, reviewSearched: true, lastPolicyNo: 'P000000001' })
+      const store = useChangeCaseStore()
+      const policyStore = usePolicyStore()
+      store.$patch({ changeCases: mockChangeCases, reviewSearched: true })
+      policyStore.$patch({ lastPolicyNo: 'P000000001' })
       return { args }
     },
     template: '<ChangeCaseListPanel v-bind="args" />'
@@ -33,8 +36,10 @@ export const ReviewMode: Story = {
   render: (args) => ({
     components: { ChangeCaseListPanel },
     setup() {
-      const store = usePosChangeStore()
-      store.$patch({ changeCases: mockChangeCases, reviewSearched: true, lastPolicyNo: 'P000000001' })
+      const store = useChangeCaseStore()
+      const policyStore = usePolicyStore()
+      store.$patch({ changeCases: mockChangeCases, reviewSearched: true })
+      policyStore.$patch({ lastPolicyNo: 'P000000001' })
       return { args }
     },
     template: '<ChangeCaseListPanel v-bind="args" />'

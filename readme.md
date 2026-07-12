@@ -11,7 +11,7 @@ flowchart LR
     A["輸入保單號碼與序號"] --> B["查詢保單"]
     B --> C["顯示保單主檔與地址資料"]
     C --> D["選擇變更項目"]
-    D --> E["產生 P-受理中案號"]
+    D --> E["資料庫原子取得案號，尚未建檔"]
     E --> F{"變更項目"}
     F --> G["001 地址變更"]
     F --> H["002 主約保額變更"]
@@ -19,10 +19,20 @@ flowchart LR
     G --> J["儲存異動"]
     H --> J
     I --> J
-    J --> K["覆核"]
-    K --> L["S-完成並套用"]
-    K --> M["C-取消不套用"]
+    J --> K["建立 P-受理中草稿"]
+    K --> L["覆核展開異動前後值"]
+    L --> M["S-完成並套用"]
+    L --> N["C-取消不套用"]
 ```
+
+### 登入與角色
+
+正式環境開啟後端 Security 時，前端會先顯示登入頁：
+
+- `MAKER`：新增、查詢與儲存保全變更。
+- `REVIEWER`：查詢案件明細並完成或取消案件。
+- 帳號密碼只保留在目前瀏覽器記憶體，重新整理後需重新登入。
+- 本機 `VITE_API_SECURITY_ENABLED=false` 時不顯示登入頁，方便開發與 Storybook 驗證。
 
 ### 左側選單
 
@@ -42,7 +52,7 @@ flowchart LR
 - 主附約資料。
 - 可選擇的變更項目。
 
-使用者選擇 `001`、`002` 或 `003` 後點擊 `產生案號`。案號先建立為 `P - 受理中`，實際是否寫入變更欄位與變更檔案，由後端依儲存時的異動內容判斷。
+使用者選擇 `001`、`002` 或 `003` 後點擊 `產生案號`。後端只在流水號表保留案號；直到儲存時確認有實際異動，才建立 `P - 受理中`、變更項目、欄位與檔案資料。
 
 ### 001 地址變更 Dialog
 
@@ -119,12 +129,14 @@ stateDiagram-v2
     C --> [*]
 ```
 
-覆核頁與查詢頁共用清單呈現，但只有覆核頁會顯示狀態操作。受理中案件可以：
+覆核頁與查詢頁共用清單呈現。使用者必須先點擊明細圖示，查看每個 `changeField / changeKey` 及異動前後值；只有覆核頁的明細區會顯示狀態操作：
 
 - 改為 `S - 完成`：後端將變更內容套用到保單主檔、主附約或地址資料。
 - 改為 `C - 取消`：後端只更新案件狀態，不套用異動資料。
 
 已完成或已取消案件不可再次覆核。
+
+完成前會再次顯示確認對話框。後端使用 `P -> A -> S` 的原子狀態流程，並確認主檔目前值仍等於草稿異動前值；若其他案件已先更新同一資料，畫面會收到 `409` 衝突訊息，不會覆蓋較新的資料。
 
 ## 功能代碼與狀態
 
@@ -144,7 +156,9 @@ stateDiagram-v2
 
 ## 主要操作規則
 
-- 案號可以先產生，但只有儲存時真的有異動，後端才會寫入受理資料、變更項目、變更欄位與變更檔案。
+- 案號由資料庫原子取得，支援服務重啟與多 Pod；流水號至少三碼且可成長到四碼以上。
+- 案號可以先取得，但只有儲存時真的有異動，後端才會寫入受理資料、變更項目、變更欄位與變更檔案。
+- 同一目標重複儲存會替換最新草稿；改回原值會刪除該目標草稿，不會保留過期異動。
 - 地址變更若沒有實際異動，畫面顯示未異動訊息，不應產生異動欄位筆數。
 - `01/02` 地址型態使用郵遞區號與地址欄位；其他地址型態使用 `email / 電話 / 手機` 欄位。
 - 郵遞區號採前 3 碼與後 3 碼，後 3 碼可空白。
@@ -164,6 +178,8 @@ stateDiagram-v2
 - Playwright：E2E 測試。
 - Zod：表單欄位檢核 schema。
 - Storybook：元件狀態展示。
+- GitHub Actions：自動執行格式、Lint、單元測試、建置、Storybook 與 Playwright。
+- Docker Compose：一起啟動 MySQL、Spring Boot API 與 nginx 前端。
 
 ## 設計風格
 
@@ -182,12 +198,23 @@ stateDiagram-v2
 - MSW 提供測試與 Storybook 的假後端。
 - Playwright 只放關鍵流程測試，不取代單元測試。
 
-目前 `posChangeStore` 保留為 facade store；後續若流程持續變大，可逐步拆成：
+Pinia 已依責任拆分：
 
-1. `policyStore`：保單查詢與保單資料。
-2. `changeCaseStore`：案號、案件清單與覆核。
-3. `addressChangeStore`：地址 Dialog 狀態。
-4. `amountChangeStore`：002/003 保額 Dialog 狀態。
+1. `workflowStore`：loading、成功與錯誤訊息。
+2. `authStore`：登入資料與 MAKER / REVIEWER 角色。
+3. `policyStore`：保單查詢、主檔、地址與代碼。
+4. `changeCaseStore`：案號、案件清單、覆核明細與狀態更新。
+5. `addressChangeStore`：001 Dialog、郵遞區號與地址草稿。
+6. `amountChangeStore`：002/003 共用 Dialog 與保額草稿。
+
+元件不再依賴單一大型 facade store；跨 Store 的動作只在 action 執行時取得其他 Store，避免模組初始化時互相讀取。
+
+Pinia 的寫入邊界採混合方式：
+
+- API 回傳、登入角色、案件狀態與 loading/error 由元件唯讀使用，只能由 Store action 更新。
+- 查詢條件與 Dialog 表單是使用者尚未送出的暫存輸入，可保留可寫，或在元件內維護。
+- Store action 負責 API 與畫面流程協調；是否有異動、案號、P/A/S/C 與覆核交易等保全規則仍以後端為唯一準則。
+- 不把全部 state 強制包成 `readonly`；否則只會增加 `v-model` 樣板，並不會取代後端商業檢核。
 
 ## 命名原則
 
@@ -271,7 +298,7 @@ flowchart TD
     A["使用者"] --> B["Vue Router"]
     B --> C["Views: Create / Query / Review"]
     C --> D["Components: 查詢面板 / Dialog / 清單"]
-    D --> E["Pinia: posChangeStore"]
+    D --> E["Pinia: auth / workflow / policy / changeCase / dialog stores"]
     E --> F["Zod schemas: 欄位檢核"]
     E --> G["API wrappers: posChange.ts"]
     G --> H["Axios httpClient: ResponseBodyDto unwrap"]
@@ -291,7 +318,12 @@ flowchart TD
 
 - `src/App.vue`：外層版面、左側選單與 `<RouterView />`。
 - `src/router/index.ts`：前端路由定義。
-- `src/stores/posChangeStore.ts`：Pinia facade store，集中串接頁面狀態與主要 action。
+- `src/stores/workflowStore.ts`：共用 loading 與訊息狀態。
+- `src/stores/authStore.ts`：登入與角色權限。
+- `src/stores/policyStore.ts`：保單資料與查詢條件。
+- `src/stores/changeCaseStore.ts`：案號、清單、覆核明細與狀態。
+- `src/stores/addressChangeStore.ts`：001 地址／聯絡資料表單。
+- `src/stores/amountChangeStore.ts`：002／003 保額表單。
 - `src/api/posChange.ts`：API 呼叫與共用 TypeScript types。
 - `src/api/httpClient.ts`：Axios client、`ResponseBodyDto` unwrap 與 HTTP 錯誤訊息轉換。
 - `src/schemas/changeCaseSchemas.ts`：Zod 表單檢核規則，包含保單查詢、地址變更、主約保額與附約保額。
@@ -300,6 +332,7 @@ flowchart TD
 - `e2e/`：Playwright E2E 測試。
 - `src/utils/format.ts`：只放通用格式化或純判斷，不放 SQL code table 的中文對照。
 - `src/views/CreateChangeView.vue`：新增保全變更頁。
+- `src/views/LoginView.vue`：正式環境 Basic Auth 登入頁。
 - `src/views/ChangeCaseListView.vue`：查詢與覆核共用清單。
 - `src/views/QueryChangeView.vue`：查詢保全變更頁。
 - `src/views/ReviewChangeView.vue`：覆核頁。
@@ -328,6 +361,38 @@ docker run --rm -p 8080:80 anilin906622/pos-web:latest
 ```
 
 若要讓容器內 nginx 連到另一個後端位置，需調整 `nginx.conf` 或在部署平台以同名 service `pos-change-api:8081` 提供後端。
+
+### 前後端一起啟動
+
+先建立本機環境檔：
+
+```bash
+cp .env.example .env
+```
+
+修改 `.env` 的 MySQL 密碼後執行：
+
+```bash
+docker compose up --build
+```
+
+預設位置：
+
+- 前端：`http://localhost:8080`
+- API：`http://localhost:8081`
+- MySQL：`localhost:3307`
+
+停止服務：
+
+```bash
+docker compose down
+```
+
+刪除本機 MySQL volume 並重新執行全部 Flyway：
+
+```bash
+docker compose down -v
+```
 
 ## 常用指令
 

@@ -1,4 +1,4 @@
-import type { PolicyChangeCase, PolicyDetail } from '../api/posChange'
+import type { PolicyChangeCase, PolicyChangeCaseDetail, PolicyDetail } from '../api/posChange'
 
 export const mockPolicyDetail: PolicyDetail = {
   master: {
@@ -43,7 +43,7 @@ export const mockPolicyDetail: PolicyDetail = {
       policyNo: 'P000000001',
       policySeq: 1,
       rideType: '1',
-      rideOrder: '00',
+      rideOrder: '000',
       productCode: 'LIFE',
       policyYears: 20,
       insuredAmount: 1000000,
@@ -53,7 +53,7 @@ export const mockPolicyDetail: PolicyDetail = {
       policyNo: 'P000000001',
       policySeq: 1,
       rideType: '2',
-      rideOrder: '01',
+      rideOrder: '001',
       productCode: 'ACC',
       policyYears: 10,
       insuredAmount: 300000,
@@ -97,3 +97,23 @@ export const mockChangeCases: PolicyChangeCase[] = [
     changeItemDescriptions: '附約保額變更'
   }
 ]
+
+export const mockChangeCaseDetail: PolicyChangeCaseDetail = {
+  changeCase: mockChangeCases[0]!,
+  changeFields: [
+    {
+      id: 1,
+      policyNo: 'P000000001',
+      policySeq: 1,
+      changeCaseNo: 'C1150710001',
+      changeItem: '001',
+      changeField: 'full_width_address',
+      changeKey: '01',
+      contentBefore: '臺北市中正區重慶南路一段 100 號',
+      contentAfter: '臺北市中正區重慶南路一段 200 號',
+      createdAt: null,
+      updatedAt: null
+    }
+  ],
+  changeFiles: []
+}

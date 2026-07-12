@@ -1,9 +1,9 @@
 <template>
-  <p v-if="store.message" class="message" :class="{ error: store.hasError }">{{ store.message }}</p>
+  <p v-if="workflow.message" class="message" :class="{ error: workflow.hasError }">{{ workflow.message }}</p>
 </template>
 
 <script setup lang="ts">
-import { usePosChangeStore } from '../stores/posChangeStore'
+import { useWorkflowStore } from '../stores/workflowStore'
 
-const store = usePosChangeStore()
+const workflow = useWorkflowStore()
 </script>

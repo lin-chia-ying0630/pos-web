@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import StatusMessage from './StatusMessage.vue'
-import { usePosChangeStore } from '../stores/posChangeStore'
+import { useWorkflowStore } from '../stores/workflowStore'
 
 const meta = {
   title: 'Components/StatusMessage',
@@ -14,7 +14,7 @@ export const Success: Story = {
   render: () => ({
     components: { StatusMessage },
     setup() {
-      const store = usePosChangeStore()
+      const store = useWorkflowStore()
       store.$patch({ message: '查詢完成', hasError: false })
       return {}
     },
@@ -26,7 +26,7 @@ export const Error: Story = {
   render: () => ({
     components: { StatusMessage },
     setup() {
-      const store = usePosChangeStore()
+      const store = useWorkflowStore()
       store.$patch({ message: '查無保單資料', hasError: true })
       return {}
     },

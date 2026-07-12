@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import PolicySummary from './PolicySummary.vue'
-import { usePosChangeStore } from '../stores/posChangeStore'
+import { usePolicyStore } from '../stores/policyStore'
 import { mockPolicyDetail } from '../stories/mockData'
 
 const meta = {
@@ -15,7 +15,7 @@ export const Default: Story = {
   render: () => ({
     components: { PolicySummary },
     setup() {
-      const store = usePosChangeStore()
+      const store = usePolicyStore()
       store.$patch({ policyDetail: mockPolicyDetail })
       return {}
     },

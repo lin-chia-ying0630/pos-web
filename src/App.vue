@@ -6,15 +6,15 @@
           <p class="eyebrow">POS Change</p>
           <h1>保全變更作業</h1>
         </div>
-        <div v-if="store.changeCase" class="case-badge">
+        <div v-if="changeCaseStore.changeCase && route.name !== 'login'" class="case-badge">
           <span>案號</span>
-          <strong>{{ store.changeCase.changeCaseNo }}</strong>
+          <strong>{{ changeCaseStore.changeCase.changeCaseNo }}</strong>
         </div>
       </header>
 
-      <div class="work-layout">
-        <aside class="side-menu">
-          <RouterLink class="side-menu-item" to="/change/create">
+      <div class="work-layout" :class="{ 'login-layout': route.name === 'login' }">
+        <aside v-if="route.name !== 'login'" class="side-menu">
+          <RouterLink v-if="authStore.hasRole('MAKER')" class="side-menu-item" to="/change/create">
             <Plus :size="18" />
             <span>新增保全變更</span>
           </RouterLink>
@@ -22,10 +22,14 @@
             <Search :size="18" />
             <span>查詢保全變更</span>
           </RouterLink>
-          <RouterLink class="side-menu-item" to="/change/review">
+          <RouterLink v-if="authStore.hasRole('REVIEWER')" class="side-menu-item" to="/change/review">
             <FileText :size="18" />
             <span>覆核</span>
           </RouterLink>
+          <button v-if="authStore.securityRequired" class="side-menu-item" type="button" @click="logout">
+            <LogOut :size="18" />
+            <span>登出</span>
+          </button>
         </aside>
 
         <section class="work-content">
@@ -37,9 +41,18 @@
 </template>
 
 <script setup lang="ts">
-import { FileText, Plus, Search } from '@lucide/vue'
-import { RouterLink, RouterView } from 'vue-router'
-import { usePosChangeStore } from './stores/posChangeStore'
+import { FileText, LogOut, Plus, Search } from '@lucide/vue'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from './stores/authStore'
+import { useChangeCaseStore } from './stores/changeCaseStore'
 
-const store = usePosChangeStore()
+const changeCaseStore = useChangeCaseStore()
+const authStore = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+
+function logout() {
+  authStore.logout()
+  return router.push('/login')
+}
 </script>

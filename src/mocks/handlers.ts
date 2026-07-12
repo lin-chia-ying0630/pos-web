@@ -1,17 +1,8 @@
 import { http, HttpResponse } from 'msw'
-import { mockChangeCases, mockPolicyDetail } from '../stories/mockData'
+import { mockChangeCaseDetail, mockChangeCases, mockPolicyDetail } from '../stories/mockData'
 
 // MSW handlers 同時供 Vitest 與 Storybook 使用，讓前端可在無後端時驗證畫面狀態。
 export const handlers = [
-  http.get('/api/policies/:policyNo/:policySeq', () => {
-    return HttpResponse.json({
-      success: true,
-      message: '查詢成功',
-      massageCode: 'SUCCESS',
-      errorMessage: '',
-      data: mockPolicyDetail
-    })
-  }),
   http.get('/api/policies/:policyNo/change-cases', () => {
     return HttpResponse.json({
       success: true,
@@ -19,6 +10,24 @@ export const handlers = [
       massageCode: 'SUCCESS',
       errorMessage: '',
       data: mockChangeCases
+    })
+  }),
+  http.get('/api/policies/:policyNo/:policySeq/change-cases/:changeCaseNo', () => {
+    return HttpResponse.json({
+      success: true,
+      message: '查詢成功',
+      massageCode: 'SUCCESS',
+      errorMessage: '',
+      data: mockChangeCaseDetail
+    })
+  }),
+  http.get('/api/policies/:policyNo/:policySeq', () => {
+    return HttpResponse.json({
+      success: true,
+      message: '查詢成功',
+      massageCode: 'SUCCESS',
+      errorMessage: '',
+      data: mockPolicyDetail
     })
   }),
   http.get('/api/postal-codes/:postalCode', ({ params }) => {

@@ -21,6 +21,6 @@ describe('httpClient', () => {
       })
     )
 
-    await expect(request({ method: 'GET', url: '/api/forbidden' })).rejects.toThrow('無權限或跨域設定未允許')
+    await expect(request({ method: 'GET', url: '/api/forbidden' })).rejects.toThrow('目前帳號沒有執行此作業的權限')
   })
 })

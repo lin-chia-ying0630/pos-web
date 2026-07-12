@@ -1,209 +1,137 @@
-# POS Change Web 技能說明
+# POS Change Web 開發規範
 
 ## 目的
 
-`pos-web` 是 POS 保全變更流程的 Vue 3 前端。畫面提供三個作業區：
-
-- `新增保全變更`：查詢保單資料、選擇變更項目、產生受理中案號，接著儲存選定的變更內容。
-- `查詢保全變更`：依保單號碼查詢既有保全受理資料。
-- `覆核`：完成或取消受理中案件。只有這個作業區可以將狀態從 `P` 改成 `S` 或 `C`。
+本檔規範 `pos-web` 的畫面、Store、API 與測試責任。重新設計流程或元件後，需同步更新本檔與 `readme.md`。
 
 ## 技術棧
 
-- Vue 3 Composition API
-- TypeScript
-- Vite
-- Vue Router
-- Pinia
-- Zod
-- lucide-vue icons
-- ESLint / Prettier
-- Vitest / Vue Test Utils
-- MSW
-- Playwright
-- Storybook
-- Sass / SCSS
-- 後端 API 透過 Vite proxy 使用 `/api`
+- Vue 3、TypeScript、Vite、Vue Router。
+- Pinia、Axios、Zod。
+- Sass、Lucide icons。
+- Vitest、Vue Test Utils、MSW、Playwright、Storybook。
+- ESLint、Prettier、GitHub Actions、Docker Compose。
 
-## 前端架構
+## 路由與角色
 
-- `src/router/index.ts`：定義新增、查詢、覆核三個路由。
-- `src/stores/posChangeStore.ts`：Pinia facade store，集中管理保單查詢結果、目前案號、受理資料清單、loading、訊息狀態與流程串接。
-- `src/api/posChange.ts`：封裝後端 API 呼叫與共用 payload types。
-- `src/api/httpClient.ts`：Axios client、`ResponseBodyDto` unwrap 與 HTTP error 友善訊息。
-- `src/schemas/changeCaseSchemas.ts`：Zod 表單檢核規則。
-- `src/mocks/handlers.ts`：MSW mock API handlers，供 Vitest 與 Storybook 使用。
-- `e2e/`：Playwright E2E 測試。
-- 地址型態、受理狀態、變更項目中文顯示來自後端 `code_description`，前端不硬寫代碼對照表。
-- `src/views/CreateChangeView.vue`：新增保全變更頁，包含 001/002/003 編輯 Dialog。
-- `src/views/ChangeCaseListView.vue`：查詢與覆核共用清單頁。
-- `src/views/QueryChangeView.vue`：保全變更查詢頁。
-- `src/views/ReviewChangeView.vue`：保全變更覆核頁。
+- `/login`：正式環境登入。
+- `/change/create`：MAKER 新增保全變更。
+- `/change/query`：MAKER 與 REVIEWER 查詢案件。
+- `/change/review`：REVIEWER 查看異動明細並覆核。
+- `VITE_API_SECURITY_ENABLED=true` 時啟用 route guard。
+- Basic Auth 密碼只放目前頁面記憶體，不寫入 localStorage、Pinia persisted state 或 log。
 
-## 主畫面流程
+## Pinia 分工
 
-1. 使用者輸入 `保單號碼` 與 `序號`。
-2. 前端呼叫 `GET /api/policies/{policyNo}/{policySeq}`。
-3. 畫面顯示保單主檔與通訊地址。
-4. 使用者選擇變更項目並點擊 `產生案號`。
-5. 前端呼叫 `POST /api/change-cases`，後端回傳 `P` 受理中案號。
-6. 前端依變更項目開啟對應編輯視窗：
-   - `001`：地址變更
-   - `002`：主約保額變更
-   - `003`：附約保額變更
+- `workflowStore`：loading 計數、成功訊息、錯誤訊息。
+- `authStore`：登入結果與 MAKER / REVIEWER 角色。
+- `policyStore`：保單查詢條件、主檔、地址、主附約與代碼。
+- `changeCaseStore`：案號、案件清單、案件明細、覆核狀態。
+- `addressChangeStore`：001 Dialog、郵遞區號與地址表單。
+- `amountChangeStore`：002／003 共用 Dialog 與保額表單。
 
-## API 與畫面對應
+不要重新建立單一大型 facade store。Dialog 狀態不可塞回 `policyStore` 或 `changeCaseStore`；全域成功／錯誤訊息統一透過 `workflowStore`。
 
-| 前端 API wrapper         | 後端 API                                                                                    | 對應畫面                  | 用途                                              |
-| ------------------------ | ------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------- |
-| `findPolicyDetail`       | `GET /api/policies/{policyNo}/{policySeq}`                                                  | 新增保全變更頁            | 查詢保單主檔、通訊地址、地址清單與主附約資料。    |
-| `findPostalCodeArea`     | `GET /api/postal-codes/{postalCode}`                                                        | 地址變更 Dialog           | 依郵遞區號前三碼或 3+3 郵遞區號帶入中文地址前綴。 |
-| `createChangeCase`       | `POST /api/change-cases`                                                                    | 新增保全變更頁            | 產生 P-受理中案號。                               |
-| `saveAddressChange`      | `POST /api/change-cases/{changeCaseNo}/address-change`                                      | `001` 地址變更 Dialog     | 儲存地址異動，Body 只送地址欄位。                 |
-| `saveMainAmountChange`   | `POST /api/change-cases/{changeCaseNo}/main-amount-change`                                  | `002` 主約保額變更 Dialog | 儲存主約保額異動，Body 只送主檔欄位。             |
-| `saveRiderAmountChange`  | `POST /api/change-cases/{changeCaseNo}/policies/{policyNo}/{policySeq}/rider-amount-change` | `003` 附約保額變更 Dialog | 儲存附約保額異動，Body 只送附約清單。             |
-| `findChangeCases`        | `GET /api/policies/{policyNo}/change-cases`                                                 | 查詢保全變更頁與覆核頁    | 查詢既有受理資料。                                |
-| `updateChangeCaseStatus` | `PATCH /api/change-cases/{changeCaseNo}/status`                                             | 覆核頁                    | 將 `P` 改為 `S` 或 `C`。                          |
+Store 互相使用時，只能在 action 內呼叫另一個 `useXxxStore()`，不要在 module top level 讀取另一個 Store，避免循環初始化。
 
-## 路由
+- API 回傳、身份、案件與 workflow state 視為元件唯讀，元件不可直接覆寫，統一由 action 更新。
+- 查詢條件與 Dialog form 是暫存 UI state，可以直接綁定或改由 setter action 管理；有連動清除、查詢等副作用時必須走 action。
+- Pinia 只放前端流程協調與共享 UI state，不重做後端的異動判斷、狀態轉移、覆核或交易規則。
+- 不為追求形式而將所有 Pinia state 包成 `readonly`；應依 server state 與 editable form state 分界。
 
-- `/change/create`：新增保全變更。
-- `/change/query`：查詢保全變更。
-- `/change/review`：覆核。
-- `/`：自動導向 `/change/create`。
+## Component 分工
 
-## 支援的變更項目
+- Component 只處理呈現、focus、使用者事件與 emit。
+- 表單檢核交給 Zod，API 呼叫交給 Store action。
+- 不在 Component 重複組 API URL 或解析 `ResponseBodyDto`。
+- Dialog 儲存成功後關閉；失敗時保留並顯示訊息。
+- Icon button 使用 Lucide 並提供 `title`。
+- Dialog 及表格要在 820px 以下維持可讀，不允許文字互相覆蓋。
 
-### 001 地址變更
+## API
 
-- Dialog 顯示該保單關聯的所有地址資料，不限定固定三筆。
-- 使用者先選擇一筆資料再修改。
-- 儲存成功後關閉 Dialog；儲存失敗時保留 Dialog 並顯示錯誤。
-- 選擇 `01/02` 時開啟郵遞區號與地址欄位，鎖住 `email / 電話 / 手機`。
-- 選擇其他地址型態時開啟 `email / 電話 / 手機`，鎖住郵遞區號與地址欄位。
-- 聯絡資料會優先顯示目前資料列可見的 email/電話/手機；未修改直接儲存時，後端應回傳 `changedFieldCount = 0`。
-- 郵遞區號畫面分成前 3 碼與後 3 碼兩個欄位，前三碼必填，後三碼可空白。
-- 郵遞區號前 3 碼輸滿後自動跳到後 3 碼；後 3 碼輸滿後自動跳到地址。
-- 3+3 郵遞區號查詢後：
-  - 地址帶入中文縣市區。
-  - 使用者需補完整地址。
-- 使用者重新 keyin 前 3 碼時，後 3 碼與舊地址內容會先清空，再依前三碼重新帶入 code table 地址前綴。
-- 若郵遞區號 API 暫時無回應，前端可先從目前保單地址清單中相同前三碼的地址推導前綴，避免畫面空白。
-- 前端將案號放在 `POST /api/change-cases/{changeCaseNo}/address-change`，Body 送選取的 `addressType` 與編輯後的地址欄位。
-- 後端判斷實際異動欄位，並回傳 `changedFieldCount`。
+- `httpClient.ts` 統一處理 Axios、Basic Authorization、`ResponseBodyDto<T>` unwrap 與友善錯誤。
+- `posChange.ts` 定義 API wrapper 與共用 payload type。
+- 所有 wrapper 保留一行中文註解，說明對應畫面。
+- request body 不包 `ResponseBodyDto`。
+- 後端 `401/403/409` 的 `errorMessage` 必須直接顯示，不能改成模糊的 Internal Server Error。
 
-### 002 主約保額變更
+主要 API：
 
-- 使用共用保額 Dialog 的 `main` 模式。
-- Dialog 顯示保單主檔資料，並讓使用者修改 `masterInsuredAmount`。
-- 儲存成功後關閉 Dialog；儲存失敗時保留 Dialog 並顯示錯誤。
-- 保單主檔上方只顯示保單號碼、序號與總保費；主約險種、主約年期、主約保額不在主檔摘要區顯示。
-- 總保費不可在畫面直接修改。
-- 前端將案號放在 `POST /api/change-cases/{changeCaseNo}/main-amount-change`，Body 送 `MainPolicyMaster` 對應欄位。
-- 後端同時記錄主檔保額與對應主約附約列。
+- `findCurrentUser`：登入驗證與角色。
+- `findPolicyDetail`：新增頁保單資料。
+- `createChangeCase`：只取得案號，尚未建立受理資料。
+- `saveAddressChange`：001 最新草稿。
+- `saveMainAmountChange`：002 最新草稿。
+- `saveRiderAmountChange`：003 最新草稿。
+- `findChangeCases`：查詢／覆核清單。
+- `findChangeCaseDetail`：覆核欄位與檔案快照前後值。
+- `updateChangeCaseStatus`：REVIEWER 完成或取消。
 
-### 003 附約保額變更
+## 新增流程
 
-- 使用共用保額 Dialog 的 `rider` 模式。
-- Dialog 從 `rideList` 顯示附約資料，但排除 `rideType === '1'`，因為該筆代表主約。
-- 儲存成功後關閉 Dialog；儲存失敗時保留 Dialog 並顯示錯誤。
-- 前端以 `rideOrder` 傳送每筆異動附約到 `POST /api/change-cases/{changeCaseNo}/policies/{policyNo}/{policySeq}/rider-amount-change`。
-- `rideOrder` 是避免改到錯誤附約保額的 key。
-- 若後端覆核完成時主附約檔保費異動，主檔總保費由主附約檔保費加總回寫。
+1. 查詢保單。
+2. 選擇 `001/002/003`。
+3. 取得資料庫保留的案號。
+4. 開啟對應 Dialog。
+5. 後端判斷實際異動；無異動顯示「未建立變更資料」。
+6. 重複修改同一目標時，畫面顯示後端回傳的最新異動筆數。
 
-## 覆核規則
+前端不可把「取得案號」顯示成已建立 `P` 案件；只有儲存且真的異動後才存在受理資料。
 
-- 新增保全變更只會保留 `P`。
-- 新增頁不可將案件標記為完成或取消。
-- 覆核頁可以變更：
-  - `P` 改 `S`：完成並套用變更。
-  - `P` 改 `C`：取消且不套用變更。
-- 已經是 `S` 或 `C` 的資料列會停用覆核按鈕。
+## 覆核流程
 
-## API 回覆格式
+- 清單只顯示摘要，必須點擊明細圖示取得 `PolicyChangeCaseDetail`。
+- 明細顯示 `changeField / changeKey / contentBefore / contentAfter` 與檔案快照。
+- 完成／取消按鈕只出現在展開的待覆核明細內。
+- 呼叫 PATCH 前必須再次確認。
+- HTTP 409 表示主檔或案件狀態已改變；顯示錯誤並要求重新查詢，不可自動重送。
 
-所有後端回覆預期使用 `ResponseBodyDto<T>`：
+## 001 地址與聯絡資料
 
-```ts
-type ResponseBodyDto<T> = {
-  success: boolean
-  message: string
-  massageCode: string
-  errorMessage: string
-  data: T
-}
-```
+- `01/02` 開啟郵遞區號與地址，鎖住 email／電話／手機。
+- 其他型態反向處理。
+- 郵遞區號前三碼必填，後三碼可空白；輸滿後自動移動 focus。
+- 修改前三碼要清除後三碼與舊地址，再帶入新縣市區。
+- API 失敗時可由目前保單相同前三碼地址推導中文前綴。
+- 未修改或改回原值時，後端應回傳 `changedFieldCount = 0`。
 
-前端 request body 不需要包 `ResponseBodyDto`。
+## 002／003 保額
 
-共用 `request<T>()` helper 會在回傳符合 `ResponseBodyDto` 格式時取出 `data`。HTTP error 時，錯誤訊息顯示順序為 `errorMessage`、`message`、前端友善訊息。
+- 共用 `AmountChangeDialog`，以 `main`／`rider` 模式區分。
+- 002 只修改主約保額。
+- 003 排除主約列，每筆 payload 必須包含 `rideOrder`。
+- 總保費只顯示，不提供編輯控制。
 
-## 表單檢核
+## Zod
 
-表單檢核集中在 `src/schemas/changeCaseSchemas.ts`：
+- 查詢、地址、主約與附約規則集中在 `changeCaseSchemas.ts`。
+- 元件或 Store 不重複寫相同必填、格式或金額範圍規則。
+- 新增 schema 規則時同步補 Vitest。
 
-- `changeCaseQuerySchema`：保單號碼與序號。
-- `addressChangeSchema`：地址型態、3+3 郵遞區號、地址或 email/電話/手機。
-- `mainAmountChangeSchema`：主約保額。
-- `riderAmountChangeSchema`：附約序號與附約保額。
+## 測試
 
-元件與 Pinia 不應重複散寫欄位檢核；新增規則時先改 schema，再補 Vitest。
+- Vitest：schema、API client、Store 與純函式。
+- MSW：Vitest 與 Storybook 共用 mock，較明確路由必須放在動態廣泛路由之前。
+- Storybook：Dialog、清單、狀態與覆核明細的代表狀態。
+- Playwright：至少覆蓋「有異動才建檔」與「展開明細後覆核」。
+- Playwright route pattern 只能攔截 `/api/`，不可攔截 Vite 的 `/src/api/` module。
 
-## 前端工具指令
+## Docker 與環境
+
+- `VITE_API_SECURITY_ENABLED` 是 build-time 參數；必須與後端 `POS_SECURITY_ENABLED` 相同。
+- nginx 透過 `pos-change-api:8081` 代理 `/api/`。
+- 前端、API、MySQL 以 `compose.yaml` 一起啟動。
+- `.env` 不提交 Git；新增環境欄位時同步更新 `.env.example`。
+
+## 驗證指令
 
 ```bash
-npm run lint
 npm run format:check
+npm run lint
 npm run test:unit
-npm run test:e2e
 npm run build
 npm run build-storybook
+npm run test:e2e
+docker compose config
 ```
-
-Playwright 首次使用需安裝瀏覽器：
-
-```bash
-npx playwright install chromium
-```
-
-## Docker
-
-前端 Docker image 由 `Dockerfile` 多階段建置：
-
-- build stage：`node:24-alpine`，執行 `npm ci` 與 `npm run build`。
-- runtime stage：`nginx:1.29-alpine`，服務 `/usr/share/nginx/html`。
-- `nginx.conf` 的 `/api/` 代理目標預設為 `http://pos-change-api:8081/api/`。
-
-建置與執行：
-
-```bash
-docker build -t anilin906622/pos-web:latest .
-docker run --rm -p 8080:80 anilin906622/pos-web:latest
-```
-
-## 優化分工原則
-
-- Zod 管欄位規則。
-- Pinia 管狀態流程。
-- API 層管後端溝通。
-- Component 管畫面互動。
-- MSW 提供測試與 Storybook 的假後端。
-- Playwright 只覆蓋關鍵端到端流程。
-
-`posChangeStore` 目前保留為 facade store。若後續流程變大，才逐步拆成 `policyStore`、`changeCaseStore`、`addressChangeStore`、`amountChangeStore`。
-
-## 本機指令
-
-```bash
-npm install
-npm run dev
-npm run build
-```
-
-預設本機瀏覽器網址：
-
-```text
-http://localhost:5173/
-```
-
-如果 `5173` 已被使用，Vite 可能會改用其他 port，例如 `5174`。

@@ -1,4 +1,5 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios'
+import { getAuthorizationHeader } from './authSession'
 
 export type ResponseBodyDto<T> = {
   success: boolean
@@ -12,6 +13,12 @@ export const httpClient = axios.create({
   headers: {
     'Content-Type': 'application/json'
   }
+})
+
+httpClient.interceptors.request.use((config) => {
+  const authorization = getAuthorizationHeader()
+  if (authorization) config.headers.set('Authorization', authorization)
+  return config
 })
 
 export async function request<T>(config: AxiosRequestConfig): Promise<T> {
@@ -41,7 +48,10 @@ function resolveAxiosErrorMessage(error: AxiosError) {
     return '後端未啟動或網路連線失敗'
   }
   if (error.response.status === 403) {
-    return '無權限或跨域設定未允許'
+    return '目前帳號沒有執行此作業的權限'
+  }
+  if (error.response.status === 401) {
+    return '帳號密碼錯誤或登入已失效'
   }
   if (error.response.status >= 500) {
     return '後端服務發生錯誤'

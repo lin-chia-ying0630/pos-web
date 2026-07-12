@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import AmountChangeDialog from './AmountChangeDialog.vue'
-import { usePosChangeStore } from '../stores/posChangeStore'
+import { useAmountChangeStore } from '../stores/amountChangeStore'
+import { useChangeCaseStore } from '../stores/changeCaseStore'
+import { usePolicyStore } from '../stores/policyStore'
 import { mockPolicyDetail } from '../stories/mockData'
 
 const meta = {
@@ -12,9 +14,11 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 function openAmountDialog(type: 'main' | 'rider') {
-  const store = usePosChangeStore()
-  store.$patch({
-    policyDetail: mockPolicyDetail,
+  const policyStore = usePolicyStore()
+  const changeCaseStore = useChangeCaseStore()
+  const amountStore = useAmountChangeStore()
+  policyStore.$patch({ policyDetail: mockPolicyDetail })
+  changeCaseStore.$patch({
     changeCase: {
       policyNo: 'P000000001',
       policySeq: 1,
@@ -23,7 +27,7 @@ function openAmountDialog(type: 'main' | 'rider') {
       changeItem: type === 'main' ? '002' : '003'
     }
   })
-  store.openAmountDialog(type)
+  amountStore.openAmountDialog(type)
 }
 
 export const MainAmount: Story = {

@@ -63,6 +63,40 @@ export type PolicyChangeCase = {
   changeItemDescriptions: string | null
 }
 
+export type PolicyChangeField = {
+  id: number
+  policyNo: string
+  policySeq: number
+  changeCaseNo: string
+  changeItem: string
+  changeField: string
+  changeKey: string | null
+  contentBefore: string | null
+  contentAfter: string | null
+  createdAt: string | null
+  updatedAt: string | null
+}
+
+export type PolicyChangeFile = {
+  id: number
+  policyNo: string
+  policySeq: number
+  changeCaseNo: string
+  changeItem: string
+  changeFile: string
+  changeKey: string | null
+  contentBefore: string | null
+  contentAfter: string | null
+  createdAt: string | null
+  updatedAt: string | null
+}
+
+export type PolicyChangeCaseDetail = {
+  changeCase: PolicyChangeCase
+  changeFields: PolicyChangeField[]
+  changeFiles: PolicyChangeFile[]
+}
+
 export type PostalCodeArea = {
   postalCode: string
   zipCode3: string
@@ -70,6 +104,20 @@ export type PostalCodeArea = {
   district: string
   addressPrefix: string
   halfWidthAddressPrefix: string
+}
+
+export type CurrentUser = {
+  username: string
+  roles: string[]
+  securityEnabled: boolean
+}
+
+export function findCurrentUser() {
+  // 畫面對應：登入頁驗證帳號與取得經辦／覆核角色。
+  return request<CurrentUser>({
+    method: 'GET',
+    url: '/api/auth/me'
+  })
 }
 
 export function findPolicyDetail(policyNo: string, policySeq: number) {
@@ -152,6 +200,14 @@ export function findChangeCases(policyNo: string) {
   return request<PolicyChangeCase[]>({
     method: 'GET',
     url: `/api/policies/${encodeURIComponent(policyNo)}/change-cases`
+  })
+}
+
+export function findChangeCaseDetail(policyNo: string, policySeq: number, changeCaseNo: string) {
+  // 畫面對應：查詢與覆核頁展開案件，顯示每一筆異動前後值。
+  return request<PolicyChangeCaseDetail>({
+    method: 'GET',
+    url: `/api/policies/${encodeURIComponent(policyNo)}/${policySeq}/change-cases/${encodeURIComponent(changeCaseNo)}`
   })
 }
 

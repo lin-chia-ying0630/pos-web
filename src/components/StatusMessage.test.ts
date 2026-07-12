@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import StatusMessage from './StatusMessage.vue'
-import { usePosChangeStore } from '../stores/posChangeStore'
+import { useWorkflowStore } from '../stores/workflowStore'
 
 describe('StatusMessage', () => {
   it('renders success message from store', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
-    const store = usePosChangeStore()
+    const store = useWorkflowStore()
     store.$patch({ message: '查詢完成', hasError: false })
 
     const wrapper = mount(StatusMessage, {
@@ -24,7 +24,7 @@ describe('StatusMessage', () => {
   it('renders error class when store has error', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
-    const store = usePosChangeStore()
+    const store = useWorkflowStore()
     store.$patch({ message: '查詢失敗', hasError: true })
 
     const wrapper = mount(StatusMessage, {
