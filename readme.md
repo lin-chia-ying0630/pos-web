@@ -95,22 +95,21 @@ UI 標籤可以顯示中文，但 request payload value 應維持數字代碼。
 
 ```mermaid
 flowchart TD
-    User["使用者"] --> Router["Vue Router<br/>/change/create<br/>/change/query<br/>/change/review"]
-    Router --> Views["Views<br/>Create / Query / Review"]
-    Views --> Components["Components<br/>查詢面板 / 地址 Dialog / 保額 Dialog / 清單"]
-    Components --> Store["Pinia facade store<br/>posChangeStore"]
-    Store --> Schemas["Zod schemas<br/>欄位檢核"]
-    Store --> Api["API wrappers<br/>posChange.ts"]
-    Api --> Http["Axios httpClient<br/>ResponseBodyDto unwrap<br/>錯誤訊息轉換"]
-    Http --> Proxy["Vite dev proxy 或 nginx /api proxy"]
-    Proxy --> Backend["pos-change-api<br/>Spring Boot"]
-
-    Stories["Storybook stories"] --> Components
-    Stories --> Msw["MSW handlers"]
-    UnitTests["Vitest + Vue Test Utils"] --> Components
-    UnitTests --> Schemas
-    UnitTests --> Msw
-    E2E["Playwright E2E"] --> Router
+    A["使用者"] --> B["Vue Router"]
+    B --> C["Views: Create / Query / Review"]
+    C --> D["Components: 查詢面板 / Dialog / 清單"]
+    D --> E["Pinia: posChangeStore"]
+    E --> F["Zod schemas: 欄位檢核"]
+    E --> G["API wrappers: posChange.ts"]
+    G --> H["Axios httpClient: ResponseBodyDto unwrap"]
+    H --> I["Vite 或 nginx 的 /api proxy"]
+    I --> J["pos-change-api Spring Boot"]
+    K["Storybook stories"] --> D
+    K --> L["MSW handlers"]
+    M["Vitest + Vue Test Utils"] --> D
+    M --> F
+    M --> L
+    N["Playwright E2E"] --> B
 ```
 
 正式畫面流程以 `Vue Router -> Views -> Components -> Pinia -> Zod/API -> Backend` 為主；測試與 Storybook 透過 MSW 模擬後端，避免只為看元件就必須啟動後端。
