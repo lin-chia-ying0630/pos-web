@@ -13,6 +13,14 @@ import {
   type PolicyChangeCase,
   type PolicyDetail
 } from '../api/posChange'
+import {
+  addressChangeSchema,
+  changeCaseQuerySchema,
+  firstSchemaMessage,
+  isPhysicalAddressType,
+  mainAmountChangeSchema,
+  riderAmountChangeSchema
+} from '../schemas/changeCaseSchemas'
 
 type AddressChangePayload = {
   addressType: string
@@ -21,8 +29,6 @@ type AddressChangePayload = {
   fullWidthAddress: string
   halfWidthAddress: string
 }
-
-const PHYSICAL_ADDRESS_TYPES = new Set(['01', '02'])
 
 type AmountRideForm = {
   rideOrder: string
@@ -91,10 +97,10 @@ export const usePosChangeStore = defineStore('posChange', {
       }
     },
     isPhysicalAddressType() {
-      return (addressType: string) => PHYSICAL_ADDRESS_TYPES.has(addressType)
+      return (addressType: string) => isPhysicalAddressType(addressType)
     },
     isContactAddressType() {
-      return (addressType: string) => !PHYSICAL_ADDRESS_TYPES.has(addressType)
+      return (addressType: string) => !isPhysicalAddressType(addressType)
     },
     amountDialogTitle(state) {
       return state.amountDialogType === 'main' ? '主約保額變更' : '附約保額變更'
@@ -132,6 +138,13 @@ export const usePosChangeStore = defineStore('posChange', {
       })
     },
     async loadPolicyFromCreateQuery() {
+      // 查詢條件統一交給 Zod，避免 component 與 store 各寫一套檢核。
+      const validation = changeCaseQuerySchema.safeParse(this.createQuery)
+      if (!validation.success) {
+        this.hasError = true
+        this.message = firstSchemaMessage(validation)
+        return
+      }
       await this.loadPolicy(this.createQuery.policyNo, this.createQuery.policySeq)
     },
     async createCase(changeItem: string) {
@@ -151,8 +164,9 @@ export const usePosChangeStore = defineStore('posChange', {
       return changeCase
     },
     openAddressDialog() {
-      const address = this.availableAddresses.find((item) => item.addressType === this.selectedAddressType)
-        ?? this.availableAddresses[0]
+      const address =
+        this.availableAddresses.find((item) => item.addressType === this.selectedAddressType) ??
+        this.availableAddresses[0]
       this.dialogMessage = ''
       if (address) this.selectAddress(address)
       this.addressDialogOpen = true
@@ -165,9 +179,9 @@ export const usePosChangeStore = defineStore('posChange', {
       this.selectedAddressType = address.addressType
       this.addressForm.addressType = address.addressType
       this.suppressPostalLookup = true
-      this.addressForm.zipCode3 = isPhysicalAddress ? address.zipCode3 ?? '' : ''
+      this.addressForm.zipCode3 = isPhysicalAddress ? (address.zipCode3 ?? '') : ''
       this.addressForm.zipCode2 = isPhysicalAddress ? this.normalizeZipCode2(address.zipCode2) : ''
-      this.addressForm.fullWidthAddress = isPhysicalAddress ? address.fullWidthAddress ?? '' : ''
+      this.addressForm.fullWidthAddress = isPhysicalAddress ? (address.fullWidthAddress ?? '') : ''
       this.addressForm.halfWidthAddress = isPhysicalAddress
         ? ''
         : address.fullWidthAddress || address.halfWidthAddress || ''
@@ -203,7 +217,10 @@ export const usePosChangeStore = defineStore('posChange', {
     },
     async lookupWhenPostalCodeReady() {
       if (this.isContactAddressType(this.addressForm.addressType)) return
-      if (this.addressForm.zipCode3.length < 3 || (this.addressForm.zipCode2.length > 0 && this.addressForm.zipCode2.length < 3)) {
+      if (
+        this.addressForm.zipCode3.length < 3 ||
+        (this.addressForm.zipCode2.length > 0 && this.addressForm.zipCode2.length < 3)
+      ) {
         this.postalLookupError = false
         return
       }
@@ -248,7 +265,11 @@ export const usePosChangeStore = defineStore('posChange', {
       return match?.[1] ?? ''
     },
     extractHalfWidthPrefix(address: string | null) {
-      const parts = address?.split(',').map((part) => part.trim()).filter(Boolean) ?? []
+      const parts =
+        address
+          ?.split(',')
+          .map((part) => part.trim())
+          .filter(Boolean) ?? []
       if (parts.length < 2) return ''
       return parts.slice(-2).join(', ')
     },
@@ -284,22 +305,20 @@ export const usePosChangeStore = defineStore('posChange', {
     },
     async saveAddressForm() {
       try {
-        if (this.isPhysicalAddressType(this.addressForm.addressType)) {
-          if (this.addressForm.zipCode3.length !== 3 || (this.addressForm.zipCode2.length > 0 && this.addressForm.zipCode2.length !== 3)) {
-            this.postalLookupError = true
-            this.dialogMessage = '郵遞區號前三碼必填，後三碼可空白；若填寫需為 3 碼'
-            return null
-          }
-          if (!this.addressForm.fullWidthAddress.trim()) {
-            this.dialogMessage = '地址不可空白'
-            return null
-          }
-        } else if (!this.addressForm.halfWidthAddress.trim()) {
-          this.dialogMessage = 'email / 電話 / 手機不可空白'
+        // 001 地址變更欄位規則集中在 addressChangeSchema。
+        const validation = addressChangeSchema.safeParse(this.addressForm)
+        if (!validation.success) {
+          this.postalLookupError = validation.error.issues.some(
+            (issue) => issue.path.includes('zipCode3') || issue.path.includes('zipCode2')
+          )
+          this.dialogMessage = firstSchemaMessage(validation)
           return null
         }
-        const result = await this.saveAddress(this.addressForm)
-        this.dialogMessage = this.saveResultMessage(this.addressTypeLabel(this.addressForm.addressType), result?.changedFieldCount ?? 0)
+        const result = await this.saveAddress(validation.data)
+        this.dialogMessage = this.saveResultMessage(
+          this.addressTypeLabel(this.addressForm.addressType),
+          result?.changedFieldCount ?? 0
+        )
         this.addressDialogOpen = false
         return result
       } catch {
@@ -353,15 +372,30 @@ export const usePosChangeStore = defineStore('posChange', {
     async saveAmountForm() {
       try {
         if (this.amountDialogType === 'main') {
-          const result = await this.saveMainAmount(this.amountForm.masterInsuredAmount)
+          // 002 主約保額變更欄位規則集中在 mainAmountChangeSchema。
+          const validation = mainAmountChangeSchema.safeParse({
+            masterInsuredAmount: this.amountForm.masterInsuredAmount
+          })
+          if (!validation.success) {
+            this.dialogMessage = firstSchemaMessage(validation)
+            return null
+          }
+          const result = await this.saveMainAmount(validation.data.masterInsuredAmount)
           this.dialogMessage = this.saveResultMessage('主約保額變更', result?.changedFieldCount ?? 0)
           this.amountDialogOpen = false
           return result
         }
-        const result = await this.saveRiderAmounts(this.amountForm.rides.map((ride) => ({
+        const request = this.amountForm.rides.map((ride) => ({
           rideOrder: ride.rideOrder,
           insuredAmount: ride.insuredAmount
-        })))
+        }))
+        // 003 附約保額變更欄位規則集中在 riderAmountChangeSchema。
+        const validation = riderAmountChangeSchema.safeParse({ rides: request })
+        if (!validation.success) {
+          this.dialogMessage = firstSchemaMessage(validation)
+          return null
+        }
+        const result = await this.saveRiderAmounts(validation.data.rides)
         this.dialogMessage = this.saveResultMessage('附約保額變更', result?.changedFieldCount ?? 0)
         this.amountDialogOpen = false
         return result
@@ -388,7 +422,11 @@ export const usePosChangeStore = defineStore('posChange', {
         })
         this.message = `${caseItem.changeCaseNo} 已更新狀態`
         await this.loadChangeCases(caseItem.policyNo)
-        if (acceptanceStatus === 'S' && this.policyDetail?.master.policyNo === caseItem.policyNo && this.policyDetail.master.policySeq === caseItem.policySeq) {
+        if (
+          acceptanceStatus === 'S' &&
+          this.policyDetail?.master.policyNo === caseItem.policyNo &&
+          this.policyDetail.master.policySeq === caseItem.policySeq
+        ) {
           await this.loadPolicy(caseItem.policyNo, caseItem.policySeq)
         }
       })

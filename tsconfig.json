@@ -11,7 +11,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    "strict": true
+    "strict": true,
+    "types": ["vitest/globals"]
   },
-  "include": ["src/**/*.ts", "src/**/*.vue"]
+  "include": ["src/**/*.ts", "src/**/*.vue", "e2e/**/*.ts", "playwright.config.ts", "eslint.config.js"]
 }

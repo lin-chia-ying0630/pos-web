@@ -78,7 +78,9 @@
           </div>
         </section>
 
-        <p v-if="store.dialogMessage" class="dialog-message" :class="{ error: store.hasError }">{{ store.dialogMessage }}</p>
+        <p v-if="store.dialogMessage" class="dialog-message" :class="{ error: store.hasError }">
+          {{ store.dialogMessage }}
+        </p>
       </div>
 
       <footer class="dialog-actions">

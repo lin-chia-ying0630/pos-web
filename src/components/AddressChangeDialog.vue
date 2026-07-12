@@ -34,7 +34,10 @@
         <div class="form-grid">
           <label>
             <span>地址型態</span>
-            <input :value="`${store.addressForm.addressType} ${store.addressTypeLabel(store.addressForm.addressType)}`" readonly />
+            <input
+              :value="`${store.addressForm.addressType} ${store.addressTypeLabel(store.addressForm.addressType)}`"
+              readonly
+            />
           </label>
           <label>
             <span>郵遞區號前 3 碼</span>
@@ -88,7 +91,9 @@
           </label>
         </div>
 
-        <p v-if="store.dialogMessage" class="dialog-message" :class="{ error: store.hasError }">{{ store.dialogMessage }}</p>
+        <p v-if="store.dialogMessage" class="dialog-message" :class="{ error: store.hasError }">
+          {{ store.dialogMessage }}
+        </p>
       </div>
 
       <footer class="dialog-actions">

@@ -9,7 +9,11 @@
         </option>
       </select>
     </label>
-    <button class="primary-button" :disabled="!store.selectedChangeItem || store.loading" @click="store.createSelectedCase">
+    <button
+      class="primary-button"
+      :disabled="!store.selectedChangeItem || store.loading"
+      @click="store.createSelectedCase"
+    >
       <Plus :size="18" />
       <span>產生案號</span>
     </button>

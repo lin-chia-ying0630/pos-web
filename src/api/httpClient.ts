@@ -18,6 +18,7 @@ export async function request<T>(config: AxiosRequestConfig): Promise<T> {
   try {
     const response = await httpClient.request<ResponseBodyDto<T> | T>(config)
     const body = response.data
+    // 後端標準回覆使用 ResponseBodyDto<T>，前端頁面只需要 data。
     if (body && typeof body === 'object' && 'success' in body && 'data' in body) {
       return body.data
     }
@@ -25,8 +26,25 @@ export async function request<T>(config: AxiosRequestConfig): Promise<T> {
   } catch (error) {
     if (error instanceof AxiosError) {
       const body = error.response?.data as Partial<ResponseBodyDto<unknown>> | undefined
-      throw new Error(body?.errorMessage || body?.message || error.response?.statusText || error.message)
+      throw new Error(body?.errorMessage || body?.message || resolveAxiosErrorMessage(error))
     }
     throw error
   }
+}
+
+// 將常見連線錯誤轉成畫面可直接顯示的中文訊息。
+function resolveAxiosErrorMessage(error: AxiosError) {
+  if (error.code === 'ECONNABORTED') {
+    return '連線逾時，請確認後端服務是否正常'
+  }
+  if (!error.response) {
+    return '後端未啟動或網路連線失敗'
+  }
+  if (error.response.status === 403) {
+    return '無權限或跨域設定未允許'
+  }
+  if (error.response.status >= 500) {
+    return '後端服務發生錯誤'
+  }
+  return error.response.statusText || error.message
 }

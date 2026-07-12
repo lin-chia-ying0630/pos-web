@@ -91,24 +91,108 @@ UI 標籤可以顯示中文，但 request payload value 應維持數字代碼。
 
 只有覆核頁應呼叫狀態更新 API。
 
+## 架構流程圖
+
+```mermaid
+flowchart TD
+    User["使用者"] --> Router["Vue Router<br/>/change/create<br/>/change/query<br/>/change/review"]
+    Router --> Views["Views<br/>Create / Query / Review"]
+    Views --> Components["Components<br/>查詢面板 / 地址 Dialog / 保額 Dialog / 清單"]
+    Components --> Store["Pinia facade store<br/>posChangeStore"]
+    Store --> Schemas["Zod schemas<br/>欄位檢核"]
+    Store --> Api["API wrappers<br/>posChange.ts"]
+    Api --> Http["Axios httpClient<br/>ResponseBodyDto unwrap<br/>錯誤訊息轉換"]
+    Http --> Proxy["Vite dev proxy 或 nginx /api proxy"]
+    Proxy --> Backend["pos-change-api<br/>Spring Boot"]
+
+    Stories["Storybook stories"] --> Components
+    Stories --> Msw["MSW handlers"]
+    UnitTests["Vitest + Vue Test Utils"] --> Components
+    UnitTests --> Schemas
+    UnitTests --> Msw
+    E2E["Playwright E2E"] --> Router
+```
+
+正式畫面流程以 `Vue Router -> Views -> Components -> Pinia -> Zod/API -> Backend` 為主；測試與 Storybook 透過 MSW 模擬後端，避免只為看元件就必須啟動後端。
+
 ## 檔案職責
 
 - `src/App.vue`：外層版面、左側選單與 `<RouterView />`。
 - `src/router/index.ts`：前端路由定義。
-- `src/stores/posChangeStore.ts`：Pinia 共用狀態與主要 action。
+- `src/stores/posChangeStore.ts`：Pinia facade store，集中串接頁面狀態與主要 action。
 - `src/api/posChange.ts`：API 呼叫與共用 TypeScript types。
+- `src/api/httpClient.ts`：Axios client、`ResponseBodyDto` unwrap 與 HTTP 錯誤訊息轉換。
+- `src/schemas/changeCaseSchemas.ts`：Zod 表單檢核規則，包含保單查詢、地址變更、主約保額與附約保額。
+- `src/mocks/handlers.ts`：MSW API mock，供 Vitest 與 Storybook 共用。
+- `src/test/setup.ts`：Vitest 測試初始化。
+- `e2e/`：Playwright E2E 測試。
 - `src/utils/format.ts`：只放通用格式化或純判斷，不放 SQL code table 的中文對照。
 - `src/views/CreateChangeView.vue`：新增保全變更頁。
 - `src/views/ChangeCaseListView.vue`：查詢與覆核共用清單。
 - `src/views/QueryChangeView.vue`：查詢保全變更頁。
 - `src/views/ReviewChangeView.vue`：覆核頁。
-- `src/style.css`：版面與視覺樣式。
+- `src/style.scss`：版面與視覺樣式。
 - `src/main.ts`：Vue app bootstrap。
 - `vite.config.ts`：Vite 與後端 proxy 設定。
 
-目前已導入 Vue Router 與 Pinia。若應用程式後續變大，建議依序拆分：
+## 前端品質工具
 
-1. 將地址 Dialog 從 `CreateChangeView.vue` 拆成 component。
-2. 將保額 Dialog 從 `CreateChangeView.vue` 拆成 component。
-3. 將保單主檔與通訊地址資訊拆成 component。
-4. 將覆核表格列操作拆成 component。
+目前已導入以下工具：
+
+- ESLint：檢查 Vue/TypeScript 程式品質。
+- Prettier：統一格式。
+- Vitest：單元測試。
+- Vue Test Utils：Vue component 測試。
+- MSW：mock API。
+- Playwright：E2E 測試。
+- Zod：表單欄位檢核 schema。
+- Storybook：元件狀態展示。
+
+常用指令：
+
+```bash
+npm run lint
+npm run format:check
+npm run test:unit
+npm run test:e2e
+npm run build
+npm run build-storybook
+```
+
+## Docker
+
+前端 Docker image 使用多階段建置：
+
+1. `node:24-alpine` 執行 `npm ci` 與 `npm run build`。
+2. `nginx:1.29-alpine` 提供靜態檔案。
+3. `nginx.conf` 將 `/api/` 代理到 `http://pos-change-api:8081/api/`。
+
+建置 image：
+
+```bash
+docker build -t anilin906622/pos-web:latest .
+```
+
+本機執行：
+
+```bash
+docker run --rm -p 8080:80 anilin906622/pos-web:latest
+```
+
+若要讓容器內 nginx 連到另一個後端位置，需調整 `nginx.conf` 或在部署平台以同名 service `pos-change-api:8081` 提供後端。
+
+## 優化分工原則
+
+- Zod 管欄位規則。
+- Pinia 管頁面狀態與流程。
+- API 層管後端溝通與錯誤訊息轉換。
+- 元件只管畫面與使用者互動。
+- MSW 提供測試與 Storybook 的假後端。
+- Playwright 只放關鍵流程測試，不取代單元測試。
+
+目前 `posChangeStore` 保留為 facade store；後續若流程持續變大，可逐步拆成：
+
+1. `policyStore`：保單查詢與保單資料。
+2. `changeCaseStore`：案號、案件清單與覆核。
+3. `addressChangeStore`：地址 Dialog 狀態。
+4. `amountChangeStore`：002/003 保額 Dialog 狀態。
