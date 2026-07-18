@@ -33,6 +33,12 @@
             <Search :size="18" />
             <span>查詢保單主檔</span>
           </RouterLink>
+          <RouterLink class="side-menu-item" to="/policy/address"
+            ><Search :size="18" /><span>查詢保單地址</span></RouterLink
+          >
+          <RouterLink class="side-menu-item" to="/policy/rides"
+            ><Search :size="18" /><span>查詢保單主附約</span></RouterLink
+          >
           <RouterLink v-if="authStore.hasRole('REVIEWER')" class="side-menu-item" to="/change/review">
             <FileText :size="18" />
             <span>覆核</span>

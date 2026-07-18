@@ -1,0 +1,21 @@
+<template>
+  <section v-if="policyStore.policyDetail" class="detail-grid">
+    <article class="panel">
+      <div class="panel-title">
+        <MapPinned :size="18" />
+        <h2>保單地址資訊</h2>
+      </div>
+      <dl class="data-grid address-grid">
+        <div v-for="address in policyStore.policyDetail.addressList" :key="address.addressType" class="wide">
+          <dt>{{ policyStore.addressTypeLabel(address.addressType) }}</dt>
+          <dd>{{ policyStore.addressDisplay(address) }}</dd>
+        </div>
+      </dl>
+    </article>
+  </section>
+</template>
+<script setup lang="ts">
+import { MapPinned } from '@lucide/vue'
+import { usePolicyStore } from '../stores/policyStore'
+const policyStore = usePolicyStore()
+</script>
