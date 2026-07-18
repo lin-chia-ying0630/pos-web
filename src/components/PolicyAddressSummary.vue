@@ -6,7 +6,11 @@
         <h2>保單地址資訊</h2>
       </div>
       <dl class="data-grid address-grid">
-        <div v-for="address in policyStore.policyDetail.addressList" :key="address.addressType" class="wide">
+        <div
+          v-for="address in policyStore.policyDetail.addressList"
+          :key="address.addressType"
+          class="wide query-field"
+        >
           <dt>{{ policyStore.addressTypeLabel(address.addressType) }}</dt>
           <dd>{{ policyStore.addressDisplay(address) }}</dd>
         </div>

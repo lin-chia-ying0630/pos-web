@@ -6,15 +6,15 @@
         <h2>保單主檔資訊</h2>
       </div>
       <dl class="data-grid">
-        <div>
+        <div class="query-field">
           <dt>保單號碼</dt>
           <dd>{{ policyStore.policyDetail.master.policyNo }}</dd>
         </div>
-        <div>
+        <div class="query-field">
           <dt>序號</dt>
           <dd>{{ policyStore.policyDetail.master.policySeq }}</dd>
         </div>
-        <div>
+        <div class="query-field">
           <dt>總保費</dt>
           <dd>{{ formatNumber(policyStore.policyDetail.master.premium, 4) }}</dd>
         </div>

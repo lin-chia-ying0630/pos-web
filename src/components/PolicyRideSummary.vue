@@ -6,7 +6,7 @@
         <h2>保單主附約資訊</h2>
       </div>
       <dl class="data-grid">
-        <div v-for="ride in policyStore.policyDetail.rideList" :key="ride.rideOrder" class="wide">
+        <div v-for="ride in policyStore.policyDetail.rideList" :key="ride.rideOrder" class="wide query-field">
           <dt>{{ ride.rideOrder }}／{{ ride.productCode }}</dt>
           <dd>保額 {{ ride.insuredAmount }}／保費 {{ ride.premium }}</dd>
         </div>

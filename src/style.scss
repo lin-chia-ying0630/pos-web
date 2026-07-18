@@ -318,6 +318,26 @@ h2 {
   color: #647281;
 }
 
+.query-field {
+  background: #fff;
+  border: 1px solid #d7e0e8;
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.query-field dt {
+  color: #647281;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.query-field dd {
+  color: #1f2933;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 6px 0 0;
+}
+
 .work-content,
 .work-view {
   min-width: 0;
