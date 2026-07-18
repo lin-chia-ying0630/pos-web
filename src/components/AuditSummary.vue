@@ -1,8 +1,11 @@
 <template>
   <div class="record-audit">
-    <span>新增：{{ display(record.createdBy) }}／{{ format(record.createdAt) }}</span>
-    <span>異動：{{ display(record.updatedBy) }}／{{ format(record.updatedAt) }}</span>
-    <span>覆核：{{ display(record.reviewedBy) }}／{{ format(record.reviewedAt) }}</span>
+    <span><small>新增人員</small>{{ display(record.createdBy) }}</span>
+    <span><small>新增時間</small>{{ format(record.createdAt) }}</span>
+    <span><small>異動人員</small>{{ display(record.updatedBy) }}</span>
+    <span><small>異動時間</small>{{ format(record.updatedAt) }}</span>
+    <span><small>覆核人員</small>{{ display(record.reviewedBy) }}</span>
+    <span><small>覆核時間</small>{{ format(record.reviewedAt) }}</span>
   </div>
 </template>
 <script setup lang="ts">

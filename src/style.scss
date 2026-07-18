@@ -699,13 +699,25 @@ input.invalid {
 .record-audit {
   border-top: 1px solid #edf0f3;
   color: #647281;
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 0.72rem;
+  display: grid;
+  font-size: 0.78rem;
   font-weight: 700;
-  gap: 4px 16px;
+  gap: 8px 14px;
+  grid-template-columns: repeat(6, minmax(100px, 1fr));
   margin: 0 12px;
   padding: 6px 0;
+}
+
+.record-audit span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.record-audit small {
+  color: #647281;
+  font-size: 0.68rem;
+  font-weight: 800;
 }
 
 .case-actions {
