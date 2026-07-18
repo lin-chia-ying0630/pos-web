@@ -11,11 +11,11 @@
           <dt>保單號碼</dt>
           <dd>{{ policyStore.policyDetail.master.policyNo }}</dd>
         </div>
-        <div class="query-field">
+        <div class="query-field numeric-field">
           <dt>序號</dt>
           <dd>{{ policyStore.policyDetail.master.policySeq }}</dd>
         </div>
-        <div class="query-field">
+        <div class="query-field numeric-field">
           <dt>總保費</dt>
           <dd>{{ formatNumber(policyStore.policyDetail.master.premium, 4) }}</dd>
         </div>

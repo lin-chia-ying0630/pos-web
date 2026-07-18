@@ -8,7 +8,7 @@
       <div class="query-columns query-columns-head"><strong>欄位名稱</strong><strong>內容</strong></div>
       <dl class="data-grid">
         <template v-for="ride in policyStore.policyDetail.rideList" :key="ride.rideOrder">
-          <div class="wide query-field">
+          <div class="wide query-field numeric-field">
             <dt>附約序號</dt>
             <dd>{{ ride.rideOrder }}</dd>
           </div>
@@ -16,11 +16,11 @@
             <dt>險種</dt>
             <dd>{{ ride.productCode }}</dd>
           </div>
-          <div class="wide query-field">
+          <div class="wide query-field numeric-field">
             <dt>保額</dt>
             <dd>{{ ride.insuredAmount }}</dd>
           </div>
-          <div class="wide query-field">
+          <div class="wide query-field numeric-field">
             <dt>保費</dt>
             <dd>{{ ride.premium }}</dd>
           </div>

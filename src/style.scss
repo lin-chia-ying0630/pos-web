@@ -360,6 +360,15 @@ h2 {
   margin: 0;
 }
 
+.query-field dt,
+.query-field dd {
+  text-align: left;
+}
+
+.query-field.numeric-field dd {
+  text-align: right;
+}
+
 .query-columns,
 .query-table .query-field {
   display: grid;
