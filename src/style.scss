@@ -720,6 +720,62 @@ input.invalid {
   font-weight: 800;
 }
 
+.query-record-table {
+  overflow-x: auto;
+}
+
+.query-record-head,
+.query-record-row {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  min-width: max-content;
+  padding: 12px 14px;
+}
+
+.query-record-head {
+  background: #eef3f6;
+  color: #647281;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.query-record-row {
+  border-top: 1px solid #d7e0e8;
+  color: #1f2933;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.query-record-head > *,
+.query-record-row > * {
+  min-width: 110px;
+  overflow-wrap: anywhere;
+}
+
+.query-record-row > :nth-child(1) {
+  min-width: 140px;
+}
+.query-record-row > :nth-child(2) {
+  min-width: 80px;
+}
+.query-record-row > :nth-child(3) {
+  min-width: 180px;
+}
+
+.query-record-table:not(.address-query-table):not(.ride-query-table) .query-record-head,
+.query-record-table:not(.address-query-table):not(.ride-query-table) .query-record-row {
+  grid-template-columns: 160px 80px 140px repeat(6, 150px);
+}
+.address-query-table .query-record-head,
+.address-query-table .query-record-row {
+  grid-template-columns: 150px 110px 320px 320px repeat(6, 150px);
+}
+.ride-query-table .query-record-head,
+.ride-query-table .query-record-row {
+  grid-template-columns: 110px 110px 150px 110px 140px 140px repeat(6, 150px);
+}
+
 .case-actions {
   display: flex;
   gap: 8px;
