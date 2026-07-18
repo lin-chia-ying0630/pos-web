@@ -46,7 +46,9 @@ export const usePolicyStore = defineStore('policy', {
     },
     addressDisplay(address: PolicyAddress) {
       const zip = `${address.zipCode3 ?? ''}${this.normalizeZipCode2(address.zipCode2)}`
-      const content = address.fullWidthAddress || address.halfWidthAddress || '-'
+      const content = isPhysicalAddressType(address.addressType)
+        ? address.fullWidthAddress || '-'
+        : address.halfWidthAddress || '-'
       return zip ? `${zip} ${content}` : content
     },
     async fetchPolicy(policyNo: string, policySeq: number) {
