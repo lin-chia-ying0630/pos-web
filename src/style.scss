@@ -403,7 +403,7 @@ h2 {
   border-radius: 0;
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 2.3fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   padding: 8px 12px;
 }
 .query-table .query-field dt {
