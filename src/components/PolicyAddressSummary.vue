@@ -1,6 +1,6 @@
 <template>
   <section v-if="policyStore.policyDetail" class="detail-grid">
-    <article class="panel">
+    <article class="panel query-table">
       <div class="panel-title">
         <MapPinned :size="18" />
         <h2>保單地址資訊</h2>

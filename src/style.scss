@@ -338,6 +338,24 @@ h2 {
   margin: 6px 0 0;
 }
 
+.query-table .data-grid {
+  gap: 0;
+}
+.query-table .query-field {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(180px, 1fr) minmax(260px, 1.5fr);
+  padding: 16px 12px;
+}
+.query-table .query-field dt {
+  align-self: center;
+}
+.query-table .query-field dd {
+  margin: 0;
+}
+
 .work-content,
 .work-view {
   min-width: 0;
