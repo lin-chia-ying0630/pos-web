@@ -34,6 +34,8 @@
 - `addressChangeStore`：001 Dialog、郵遞區號與地址表單。
 - `amountChangeStore`：002／003 共用 Dialog 與保額表單。
 
+查詢到保單後，`PolicyEntityMenu` 顯示主檔、地址與主附約 entity 摘要；此元件只讀取 `policyStore`，兩個角色都可查看，所有異動按鈕仍由角色與後端權限控制。
+
 不要重新建立單一大型 facade store。Dialog 狀態不可塞回 `policyStore` 或 `changeCaseStore`；全域成功／錯誤訊息統一透過 `workflowStore`。
 
 Store 互相使用時，只能在 action 內呼叫另一個 `useXxxStore()`，不要在 module top level 讀取另一個 Store，避免循環初始化。
