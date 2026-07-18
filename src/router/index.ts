@@ -21,7 +21,7 @@ export const router = createRouter({
     { path: '/policy/query', name: 'policy-query', component: PolicyQueryView },
     { path: '/policy/address', name: 'policy-address-query', component: PolicyAddressQueryView },
     { path: '/policy/rides', name: 'policy-ride-query', component: PolicyRideQueryView },
-    { path: '/codes', name: 'code-query', component: CodeQueryView },
+    { path: '/codes', name: 'code-query', component: CodeQueryView, meta: { roles: ['MAKER', 'REVIEWER'] } },
     { path: '/change/review', name: 'change-review', component: ReviewChangeView, meta: { role: 'REVIEWER' } },
     {
       path: '/user/authorization',
@@ -45,7 +45,7 @@ export function installAuthGuard(pinia: Pinia) {
     if (!authStore.authenticated) return '/login'
     const role = to.meta.role as 'MAKER' | 'REVIEWER' | undefined
     if (role && !authStore.hasRole(role)) return '/change/query'
-    const roles = to.meta.roles as Array<'USER' | 'ADMIN'> | undefined
+    const roles = to.meta.roles as Array<'MAKER' | 'REVIEWER' | 'USER' | 'ADMIN'> | undefined
     if (roles && !roles.some((item) => authStore.hasRole(item))) return '/change/query'
     return true
   })
