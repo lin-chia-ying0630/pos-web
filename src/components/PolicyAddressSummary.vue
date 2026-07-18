@@ -12,7 +12,7 @@
             <dt>地址類型</dt>
             <dd>{{ policyStore.addressTypeLabel(address.addressType) }}</dd>
           </div>
-          <div class="wide query-field numeric-field">
+          <div class="wide query-field">
             <dt>郵遞區號</dt>
             <dd>{{ `${address.zipCode3 ?? ''}${address.zipCode2 ?? ''}` || '-' }}</dd>
           </div>
