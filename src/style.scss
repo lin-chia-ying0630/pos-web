@@ -340,6 +340,7 @@ h2 {
 
 .query-table .data-grid {
   gap: 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .ride-record {
@@ -402,7 +403,7 @@ h2 {
   border-radius: 0;
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(180px, 1fr) minmax(260px, 1.5fr);
+  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 2.3fr);
   padding: 12px;
 }
 .query-table .query-field dt {
@@ -444,8 +445,10 @@ h2 {
 
 .query-table .query-field dd {
   color: #1f2933;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .work-content,
