@@ -25,12 +25,14 @@
             <dd>{{ address.halfWidthAddress || '-' }}</dd>
           </div>
         </dl>
+        <AuditSummary :record="address" />
       </div>
     </article>
   </section>
 </template>
 <script setup lang="ts">
 import { MapPinned } from '@lucide/vue'
+import AuditSummary from './AuditSummary.vue'
 import { usePolicyStore } from '../stores/policyStore'
 const policyStore = usePolicyStore()
 </script>

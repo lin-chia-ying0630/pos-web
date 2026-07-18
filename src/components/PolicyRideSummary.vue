@@ -33,12 +33,14 @@
             <dd>{{ ride.premium }}</dd>
           </div>
         </dl>
+        <AuditSummary :record="ride" />
       </div>
     </article>
   </section>
 </template>
 <script setup lang="ts">
 import { FileText } from '@lucide/vue'
+import AuditSummary from './AuditSummary.vue'
 import { usePolicyStore } from '../stores/policyStore'
 const policyStore = usePolicyStore()
 </script>

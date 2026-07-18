@@ -21,6 +21,12 @@
         <span>序號</span>
         <span>變更項目</span>
         <span>狀態</span>
+        <span>新增人員</span>
+        <span>新增時間</span>
+        <span>異動人員</span>
+        <span>異動時間</span>
+        <span>覆核人員</span>
+        <span>覆核時間</span>
         <span>檢視</span>
       </div>
       <template v-for="caseItem in changeCaseStore.changeCases" :key="caseItem.changeCaseNo">
@@ -29,11 +35,12 @@
           <span>{{ caseItem.policySeq }}</span>
           <span>{{ caseItem.changeItemDescriptions || caseItem.changeItems || '-' }}</span>
           <span>{{ statusDisplay(caseItem) }}</span>
-          <span class="case-audit">
-            <small>新增：{{ auditValue(caseItem.createdBy) }}／{{ dateValue(caseItem.createdAt) }}</small>
-            <small>異動：{{ auditValue(caseItem.updatedBy) }}／{{ dateValue(caseItem.updatedAt) }}</small>
-            <small>覆核：{{ auditValue(caseItem.reviewedBy) }}／{{ dateValue(caseItem.reviewedAt) }}</small>
-          </span>
+          <span>{{ auditValue(caseItem.createdBy) }}</span>
+          <span>{{ dateValue(caseItem.createdAt) }}</span>
+          <span>{{ auditValue(caseItem.updatedBy) }}</span>
+          <span>{{ dateValue(caseItem.updatedAt) }}</span>
+          <span>{{ auditValue(caseItem.reviewedBy) }}</span>
+          <span>{{ dateValue(caseItem.reviewedAt) }}</span>
           <div class="case-actions">
             <button
               class="icon-button"

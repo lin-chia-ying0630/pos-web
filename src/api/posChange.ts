@@ -4,6 +4,12 @@ export type PolicyMaster = {
   policyNo: string
   policySeq: number
   premium: number
+  createdBy?: string | null
+  createdAt?: string | null
+  updatedBy?: string | null
+  updatedAt?: string | null
+  reviewedBy?: string | null
+  reviewedAt?: string | null
 }
 
 export type PolicyAddress = {
@@ -14,6 +20,12 @@ export type PolicyAddress = {
   zipCode2: string | null
   fullWidthAddress: string | null
   halfWidthAddress: string | null
+  createdBy?: string | null
+  createdAt?: string | null
+  updatedBy?: string | null
+  updatedAt?: string | null
+  reviewedBy?: string | null
+  reviewedAt?: string | null
 }
 
 export type PolicyRide = {
@@ -25,6 +37,12 @@ export type PolicyRide = {
   policyYears: number
   insuredAmount: number
   premium: number
+  createdBy?: string | null
+  createdAt?: string | null
+  updatedBy?: string | null
+  updatedAt?: string | null
+  reviewedBy?: string | null
+  reviewedAt?: string | null
 }
 
 export type CodeDescription = {

@@ -19,11 +19,13 @@
           <dd>{{ formatNumber(policyStore.policyDetail.master.premium, 4) }}</dd>
         </div>
       </dl>
+      <AuditSummary :record="policyStore.policyDetail.master" />
     </article>
   </section>
 </template>
 <script setup lang="ts">
 import { FileText } from '@lucide/vue'
+import AuditSummary from './AuditSummary.vue'
 import { usePolicyStore } from '../stores/policyStore'
 import { formatNumber } from '../utils/format'
 const policyStore = usePolicyStore()

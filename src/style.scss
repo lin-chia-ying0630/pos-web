@@ -663,7 +663,7 @@ input.invalid {
 .case-table {
   border: 1px solid #d9e0e8;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
 }
 
 .case-table-head,
@@ -671,7 +671,8 @@ input.invalid {
   align-items: center;
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(150px, 1.2fr) 70px minmax(150px, 1fr) 100px minmax(190px, auto);
+  grid-template-columns: 170px 70px 180px 100px 110px 170px 110px 170px 110px 170px 190px;
+  min-width: 1440px;
   min-height: 52px;
   padding: 10px 12px;
 }
@@ -695,17 +696,16 @@ input.invalid {
   overflow-wrap: anywhere;
 }
 
-.case-audit {
-  display: grid;
-  gap: 2px;
-  min-width: 220px;
-}
-
-.case-audit small {
+.record-audit {
+  border-top: 1px solid #edf0f3;
   color: #647281;
+  display: flex;
+  flex-wrap: wrap;
   font-size: 0.72rem;
   font-weight: 700;
-  line-height: 1.35;
+  gap: 4px 16px;
+  margin: 0 12px;
+  padding: 6px 0;
 }
 
 .case-actions {
