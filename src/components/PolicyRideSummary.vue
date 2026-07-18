@@ -6,26 +6,35 @@
         <h2>保單主附約資訊</h2>
       </div>
       <div class="query-columns query-columns-head"><strong>欄位名稱</strong><strong>內容</strong></div>
-      <dl class="data-grid">
-        <template v-for="ride in policyStore.policyDetail.rideList" :key="ride.rideOrder">
-          <div class="wide query-field numeric-field">
+      <div v-for="ride in policyStore.policyDetail.rideList" :key="ride.rideOrder" class="ride-record">
+        <h3>主附約 {{ ride.rideOrder }}</h3>
+        <dl class="data-grid">
+          <div class="query-field">
+            <dt>附約型態</dt>
+            <dd>{{ ride.rideType }}</dd>
+          </div>
+          <div class="query-field">
+            <dt>商品代碼</dt>
+            <dd>{{ ride.productCode }}</dd>
+          </div>
+          <div class="query-field numeric-field">
             <dt>附約序號</dt>
             <dd>{{ ride.rideOrder }}</dd>
           </div>
-          <div class="wide query-field">
-            <dt>險種</dt>
-            <dd>{{ ride.productCode }}</dd>
+          <div class="query-field numeric-field">
+            <dt>保單年期</dt>
+            <dd>{{ ride.policyYears }}</dd>
           </div>
-          <div class="wide query-field numeric-field">
+          <div class="query-field numeric-field">
             <dt>保額</dt>
             <dd>{{ ride.insuredAmount }}</dd>
           </div>
-          <div class="wide query-field numeric-field">
+          <div class="query-field numeric-field">
             <dt>保費</dt>
             <dd>{{ ride.premium }}</dd>
           </div>
-        </template>
-      </dl>
+        </dl>
+      </div>
     </article>
   </section>
 </template>
