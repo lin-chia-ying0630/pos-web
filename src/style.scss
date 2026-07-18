@@ -367,6 +367,31 @@ h2 {
   border-bottom: 0;
 }
 
+.address-record {
+  border: 1px solid #d7e0e8;
+  border-radius: 6px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.address-record h3 {
+  background: #f5f7f9;
+  border-bottom: 1px solid #d7e0e8;
+  color: #647281;
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.address-record .query-field {
+  border-bottom: 1px solid #edf0f3;
+}
+
+.address-record .query-field:last-child {
+  border-bottom: 0;
+}
+
 .detail-grid:has(.query-table) {
   grid-template-columns: minmax(0, 1fr);
   margin: 16px auto 0;
