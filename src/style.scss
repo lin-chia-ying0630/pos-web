@@ -260,6 +260,64 @@ h2 {
   color: #374151;
 }
 
+.authorization-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(260px, 1.2fr);
+  gap: 16px;
+}
+.authorization-list {
+  display: grid;
+  gap: 8px;
+}
+.authorization-list button {
+  background: #fff;
+  border: 1px solid #d7e0e8;
+  border-radius: 6px;
+  color: #374151;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  text-align: left;
+}
+.authorization-list button.active {
+  background: #e7f8f2;
+  border-color: #0f766e;
+}
+.authorization-list button span {
+  color: #647281;
+}
+.authorization-content {
+  background: #fff;
+  border: 1px solid #d7e0e8;
+  border-radius: 6px;
+  min-height: 180px;
+  padding: 24px;
+}
+.authorization-content h3 {
+  margin: 4px 0 20px;
+}
+.authorization-content dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.authorization-content dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.authorization-content dt {
+  color: #647281;
+}
+.authorization-content dd {
+  font-weight: 700;
+  margin: 0;
+}
+.empty-state {
+  color: #647281;
+}
+
 .work-content,
 .work-view {
   min-width: 0;
