@@ -8,6 +8,7 @@ import UserAuthorizationView from '../views/UserAuthorizationView.vue'
 import PolicyQueryView from '../views/PolicyQueryView.vue'
 import PolicyAddressQueryView from '../views/PolicyAddressQueryView.vue'
 import PolicyRideQueryView from '../views/PolicyRideQueryView.vue'
+import CodeQueryView from '../views/CodeQueryView.vue'
 import { useAuthStore } from '../stores/authStore'
 
 export const router = createRouter({
@@ -20,6 +21,7 @@ export const router = createRouter({
     { path: '/policy/query', name: 'policy-query', component: PolicyQueryView },
     { path: '/policy/address', name: 'policy-address-query', component: PolicyAddressQueryView },
     { path: '/policy/rides', name: 'policy-ride-query', component: PolicyRideQueryView },
+    { path: '/codes', name: 'code-query', component: CodeQueryView },
     { path: '/change/review', name: 'change-review', component: ReviewChangeView, meta: { role: 'REVIEWER' } },
     {
       path: '/user/authorization',

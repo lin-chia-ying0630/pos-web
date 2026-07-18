@@ -46,9 +46,15 @@ export type PolicyRide = {
 }
 
 export type CodeDescription = {
+  codeGroup?: string
+  codeField?: string
   codeBefore: string
   codeAfter?: string
   codeDescription: string
+}
+
+export function findAllCodes() {
+  return request<CodeDescription[]>({ url: '/user-authorizations/codes', method: 'GET' })
 }
 
 export type PolicyDetail = {
