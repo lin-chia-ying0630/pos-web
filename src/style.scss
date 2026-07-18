@@ -763,6 +763,10 @@ input.invalid {
   min-width: 180px;
 }
 
+.query-record-row > .numeric-field {
+  text-align: right;
+}
+
 .query-record-table:not(.address-query-table):not(.ride-query-table) .query-record-head,
 .query-record-table:not(.address-query-table):not(.ride-query-table) .query-record-row {
   grid-template-columns: 160px 80px 140px repeat(6, 150px);

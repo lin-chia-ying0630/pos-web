@@ -15,8 +15,8 @@
         ><span>{{ ride.rideType }}</span
         ><span>{{ ride.productCode }}</span
         ><span class="numeric-field">{{ ride.policyYears }}</span
-        ><span class="numeric-field">{{ ride.insuredAmount }}</span
-        ><span class="numeric-field">{{ ride.premium }}</span
+        ><span class="numeric-field">{{ formatNumber(ride.insuredAmount, 2) }}</span
+        ><span class="numeric-field">{{ formatNumber(ride.premium, 4) }}</span
         ><span>{{ ride.createdBy || '-' }}</span
         ><span>{{ ride.createdAt || '-' }}</span
         ><span>{{ ride.updatedBy || '-' }}</span
@@ -30,5 +30,6 @@
 <script setup lang="ts">
 import { FileText } from '@lucide/vue'
 import { usePolicyStore } from '../stores/policyStore'
+import { formatNumber } from '../utils/format'
 const policyStore = usePolicyStore()
 </script>
