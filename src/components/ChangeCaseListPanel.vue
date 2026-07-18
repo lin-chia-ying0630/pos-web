@@ -29,6 +29,11 @@
           <span>{{ caseItem.policySeq }}</span>
           <span>{{ caseItem.changeItemDescriptions || caseItem.changeItems || '-' }}</span>
           <span>{{ statusDisplay(caseItem) }}</span>
+          <span class="case-audit">
+            <small>新增：{{ auditValue(caseItem.createdBy) }}／{{ dateValue(caseItem.createdAt) }}</small>
+            <small>異動：{{ auditValue(caseItem.updatedBy) }}／{{ dateValue(caseItem.updatedAt) }}</small>
+            <small>覆核：{{ auditValue(caseItem.reviewedBy) }}／{{ dateValue(caseItem.reviewedAt) }}</small>
+          </span>
           <div class="case-actions">
             <button
               class="icon-button"
@@ -150,5 +155,13 @@ function statusDisplay(caseItem: PolicyChangeCase) {
   return caseItem.acceptanceStatusDescription
     ? `${caseItem.acceptanceStatus} - ${caseItem.acceptanceStatusDescription}`
     : caseItem.acceptanceStatus
+}
+
+function auditValue(value: string | null | undefined) {
+  return value || '-'
+}
+
+function dateValue(value: string | null | undefined) {
+  return value ? value.replace('T', ' ').slice(0, 19) : '-'
 }
 </script>

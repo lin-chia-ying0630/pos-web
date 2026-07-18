@@ -1,11 +1,10 @@
 <template>
   <section v-if="policyStore.policyDetail" class="detail-grid">
-    <article class="panel query-table">
+    <article class="panel query-table policy-ride-table">
       <div class="panel-title">
         <FileText :size="18" />
         <h2>保單主附約資訊</h2>
       </div>
-      <div class="query-columns query-columns-head"><strong>欄位名稱</strong><strong>內容</strong></div>
       <div v-for="ride in policyStore.policyDetail.rideList" :key="ride.rideOrder" class="ride-record">
         <h3>主附約 {{ ride.rideOrder }}</h3>
         <dl class="data-grid">

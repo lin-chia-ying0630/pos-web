@@ -1,11 +1,10 @@
 <template>
   <section v-if="policyStore.policyDetail" class="detail-grid">
-    <article class="panel query-table">
+    <article class="panel query-table policy-master-table">
       <div class="panel-title">
         <FileText :size="18" />
         <h2>保單主檔資訊</h2>
       </div>
-      <div class="query-columns query-columns-head"><strong>欄位名稱</strong><strong>內容</strong></div>
       <dl class="data-grid">
         <div class="query-field">
           <dt>保單號碼</dt>

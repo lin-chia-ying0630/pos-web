@@ -70,6 +70,12 @@ export type PolicyChangeCase = {
   acceptanceStatusDescription: string | null
   changeItems: string | null
   changeItemDescriptions: string | null
+  createdBy?: string | null
+  createdAt?: string | null
+  updatedBy?: string | null
+  updatedAt?: string | null
+  reviewedBy?: string | null
+  reviewedAt?: string | null
 }
 
 export type PolicyChangeField = {
