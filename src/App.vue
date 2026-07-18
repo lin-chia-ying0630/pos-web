@@ -33,6 +33,10 @@
             <FileText :size="18" />
             <span>覆核</span>
           </RouterLink>
+          <RouterLink class="side-menu-item" to="/user/authorization">
+            <UserRound :size="18" />
+            <span>使用者授權</span>
+          </RouterLink>
           <button
             v-if="authStore.securityRequired && authStore.authenticated"
             class="side-menu-item"

@@ -39,6 +39,8 @@
 `PolicyEntityMenu` 同時顯示畫面代碼對照。對照資料來自後端 `PolicyDetail.screenPermissions`
 （資料庫 `main.code_description` 的 `main-screen/screen` 群組），不可在前端另寫一份角色規則。
 
+使用者授權頁使用 `/api/user-authorizations` 取得 `main.user/authorities` 對照，四個支線的角色規則由資料庫維護。
+
 不要重新建立單一大型 facade store。Dialog 狀態不可塞回 `policyStore` 或 `changeCaseStore`；全域成功／錯誤訊息統一透過 `workflowStore`。
 
 Store 互相使用時，只能在 action 內呼叫另一個 `useXxxStore()`，不要在 module top level 讀取另一個 Store，避免循環初始化。

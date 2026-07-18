@@ -138,6 +138,14 @@ export function findCurrentUser() {
   })
 }
 
+export function findUserAuthorizationPermissions() {
+  // 畫面對應：使用者授權頁顯示四個支線與 user/admin 角色對照。
+  return request<CodeDescription[]>({
+    method: 'GET',
+    url: '/api/user-authorizations'
+  })
+}
+
 export function findPolicyDetail(policyNo: string, policySeq: number) {
   // 畫面對應：新增保全變更頁查詢保單，顯示保單主檔、通訊地址、地址清單與主附約資料。
   return request<PolicyDetail>({
