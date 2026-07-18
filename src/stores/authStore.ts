@@ -26,7 +26,7 @@ export const useAuthStore = defineStore('auth', {
     }
   },
   actions: {
-    hasRole(role: 'MAKER' | 'REVIEWER') {
+    hasRole(role: 'MAKER' | 'REVIEWER' | 'USER' | 'ADMIN') {
       if (!this.initialized) return false
       return !this.securityRequired || (this.currentUser?.roles.includes(role) ?? false)
     },
