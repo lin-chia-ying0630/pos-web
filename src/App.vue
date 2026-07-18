@@ -56,7 +56,6 @@
             <LogOut :size="18" />
             <span>登出</span>
           </button>
-          <PolicyEntityMenu />
         </aside>
 
         <section class="work-content">
@@ -72,7 +71,6 @@ import { FileText, LogOut, Plus, Search, UserRound } from '@lucide/vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/authStore'
 import { useChangeCaseStore } from './stores/changeCaseStore'
-import PolicyEntityMenu from './components/PolicyEntityMenu.vue'
 
 const changeCaseStore = useChangeCaseStore()
 const authStore = useAuthStore()
