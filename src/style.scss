@@ -341,6 +341,10 @@ h2 {
 .query-table .data-grid {
   gap: 0;
 }
+
+.detail-grid:has(.query-table) {
+  grid-template-columns: minmax(0, 1fr);
+}
 .query-table .query-field {
   border-width: 0 0 1px;
   border-radius: 0;
