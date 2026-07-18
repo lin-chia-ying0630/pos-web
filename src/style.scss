@@ -364,18 +364,13 @@ h2 {
 .query-table .query-field {
   display: grid;
   gap: 18px;
-  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) minmax(260px, 1.6fr);
+  grid-template-columns: minmax(220px, 1fr) minmax(320px, 2fr);
 }
 
 .query-columns-head {
   background: #eef3f6;
   color: #647281;
   padding: 12px;
-}
-
-.query-table .query-field span {
-  align-self: center;
-  color: #647281;
 }
 
 .work-content,
