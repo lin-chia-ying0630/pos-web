@@ -5,6 +5,9 @@
         <MapPinned :size="18" />
         <h2>保單地址資訊</h2>
       </div>
+      <div class="query-columns query-columns-head">
+        <strong>欄位名稱</strong><strong>Key</strong><strong>內容</strong>
+      </div>
       <dl class="data-grid address-grid">
         <div
           v-for="address in policyStore.policyDetail.addressList"
@@ -12,6 +15,7 @@
           class="wide query-field"
         >
           <dt>{{ policyStore.addressTypeLabel(address.addressType) }}</dt>
+          <span>address_{{ address.addressType }}</span>
           <dd>{{ policyStore.addressDisplay(address) }}</dd>
         </div>
       </dl>
