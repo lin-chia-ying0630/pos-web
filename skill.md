@@ -36,6 +36,9 @@
 
 查詢到保單後，`PolicyEntityMenu` 顯示主檔、地址與主附約 entity 摘要；此元件只讀取 `policyStore`，兩個角色都可查看，所有異動按鈕仍由角色與後端權限控制。
 
+`PolicyEntityMenu` 同時顯示畫面代碼對照。對照資料來自後端 `PolicyDetail.screenPermissions`
+（資料庫 `main.code_description` 的 `main-screen/screen` 群組），不可在前端另寫一份角色規則。
+
 不要重新建立單一大型 facade store。Dialog 狀態不可塞回 `policyStore` 或 `changeCaseStore`；全域成功／錯誤訊息統一透過 `workflowStore`。
 
 Store 互相使用時，只能在 action 內呼叫另一個 `useXxxStore()`，不要在 module top level 讀取另一個 Store，避免循環初始化。
@@ -155,6 +158,7 @@ npm run build-storybook
 npm run test:e2e
 docker compose config
 ```
+
 # Deployment safeguards
 
 - Docker Compose defaults to the `prod` Spring profile and HTTPS enforcement.

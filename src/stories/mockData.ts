@@ -71,6 +71,12 @@ export const mockPolicyDetail: PolicyDetail = {
     { codeBefore: '001', codeDescription: '地址變更' },
     { codeBefore: '002', codeDescription: '主約保額變更' },
     { codeBefore: '003', codeDescription: '附約保額變更' }
+  ],
+  screenPermissions: [
+    { codeBefore: 'CREATE', codeAfter: 'MAKER', codeDescription: '新增' },
+    { codeBefore: 'UPDATE', codeAfter: 'MAKER', codeDescription: '修改' },
+    { codeBefore: 'DELETE', codeAfter: 'MAKER', codeDescription: '刪除' },
+    { codeBefore: 'REVIEW', codeAfter: 'REVIEWER', codeDescription: '覆核' }
   ]
 }
 

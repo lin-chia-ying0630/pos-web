@@ -29,6 +29,7 @@ export type PolicyRide = {
 
 export type CodeDescription = {
   codeBefore: string
+  codeAfter?: string
   codeDescription: string
 }
 
@@ -40,6 +41,7 @@ export type PolicyDetail = {
   addressTypes: CodeDescription[]
   acceptanceStatuses: CodeDescription[]
   changeItems: CodeDescription[]
+  screenPermissions: CodeDescription[]
 }
 
 export type ChangeCase = {

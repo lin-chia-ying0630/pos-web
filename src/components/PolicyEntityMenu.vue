@@ -4,16 +4,26 @@
     <details open>
       <summary>1. 保單主檔</summary>
       <dl>
-        <div><dt>保單號碼</dt><dd>{{ master.policyNo }}</dd></div>
-        <div><dt>序號</dt><dd>{{ master.policySeq }}</dd></div>
-        <div><dt>總保費</dt><dd>{{ master.premium }}</dd></div>
+        <div>
+          <dt>保單號碼</dt>
+          <dd>{{ master.policyNo }}</dd>
+        </div>
+        <div>
+          <dt>序號</dt>
+          <dd>{{ master.policySeq }}</dd>
+        </div>
+        <div>
+          <dt>總保費</dt>
+          <dd>{{ master.premium }}</dd>
+        </div>
       </dl>
     </details>
     <details open>
       <summary>2. 保單地址（{{ policyStore.policyDetail.addressList.length }}）</summary>
       <ul>
         <li v-for="address in policyStore.policyDetail.addressList" :key="address.addressType">
-          <strong>{{ address.addressType }}</strong><span>{{ policyStore.addressDisplay(address) }}</span>
+          <strong>{{ address.addressType }}</strong
+          ><span>{{ policyStore.addressDisplay(address) }}</span>
         </li>
       </ul>
     </details>
@@ -21,7 +31,17 @@
       <summary>3. 保單附約（{{ policyStore.policyDetail.rideList.length }}）</summary>
       <ul>
         <li v-for="ride in policyStore.policyDetail.rideList" :key="ride.rideOrder">
-          <strong>{{ ride.rideOrder }}</strong><span>{{ ride.productCode }}／保額 {{ ride.insuredAmount }}／保費 {{ ride.premium }}</span>
+          <strong>{{ ride.rideOrder }}</strong
+          ><span>{{ ride.productCode }}／保額 {{ ride.insuredAmount }}／保費 {{ ride.premium }}</span>
+        </li>
+      </ul>
+    </details>
+    <details open>
+      <summary>4. 畫面代碼對照</summary>
+      <ul>
+        <li v-for="permission in policyStore.policyDetail.screenPermissions" :key="permission.codeBefore">
+          <strong>{{ permission.codeBefore }}</strong>
+          <span>{{ permission.codeDescription }}／{{ permission.codeAfter }}</span>
         </li>
       </ul>
     </details>
