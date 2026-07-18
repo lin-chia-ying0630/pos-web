@@ -66,7 +66,7 @@ export const addressChangeSchema = z
 
 // 002 主約保額變更檢核。
 export const mainAmountChangeSchema = z.object({
-  masterInsuredAmount: z.number({ error: '主約保額不可空白' }).nonnegative('主約保額不可小於 0')
+  insuredAmount: z.number({ error: '主約保額不可空白' }).nonnegative('主約保額不可小於 0')
 })
 
 // 003 附約保額變更檢核；rideOrder 是後端更新正確附約列的 key。

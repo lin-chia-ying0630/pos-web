@@ -21,7 +21,7 @@ export const useAmountChangeStore = defineStore('amountChange', {
     amountDialogType: 'main' as 'main' | 'rider',
     dialogMessage: '',
     amountForm: {
-      masterInsuredAmount: 0,
+      insuredAmount: 0,
       rides: [] as AmountRideForm[]
     }
   }),
@@ -34,7 +34,6 @@ export const useAmountChangeStore = defineStore('amountChange', {
       const policyStore = usePolicyStore()
       if (!policyStore.policyDetail) return
       this.amountDialogType = type
-      this.amountForm.masterInsuredAmount = policyStore.policyDetail.master.insuredAmount
       this.amountForm.rides = policyStore.policyDetail.rideList
         .filter((ride) => (type === 'rider' ? ride.rideType !== '1' : true))
         .map((ride) => ({
@@ -46,6 +45,8 @@ export const useAmountChangeStore = defineStore('amountChange', {
           insuredAmount: ride.insuredAmount,
           premium: ride.premium
         }))
+      const mainRide = this.amountForm.rides.find((ride) => ride.rideOrder === '000')
+      this.amountForm.insuredAmount = mainRide?.insuredAmount ?? 0
       this.dialogMessage = ''
       this.amountDialogOpen = true
     },
@@ -66,7 +67,7 @@ export const useAmountChangeStore = defineStore('amountChange', {
       try {
         if (this.amountDialogType === 'main') {
           const validation = mainAmountChangeSchema.safeParse({
-            masterInsuredAmount: this.amountForm.masterInsuredAmount
+            insuredAmount: this.amountForm.insuredAmount
           })
           if (!validation.success) {
             this.dialogMessage = firstSchemaMessage(validation)
@@ -77,7 +78,7 @@ export const useAmountChangeStore = defineStore('amountChange', {
               policyNo: policyStore.policyDetail!.master.policyNo,
               policySeq: policyStore.policyDetail!.master.policySeq,
               changeCaseNo: changeCaseStore.changeCase!.changeCaseNo,
-              masterInsuredAmount: validation.data.masterInsuredAmount
+              insuredAmount: validation.data.insuredAmount
             })
           )
           const message = this.resultMessage('主約保額變更', result.changedFieldCount)

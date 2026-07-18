@@ -19,14 +19,14 @@ export const NoCase: Story = {
       const policyStore = usePolicyStore()
       const changeCaseStore = useChangeCaseStore()
       policyStore.$patch({ policyDetail: mockPolicyDetail })
-      changeCaseStore.$patch({ selectedChangeItem: '001', changeCase: null })
+      changeCaseStore.$patch({ selectedChangeItems: ['001', '002'], changeCase: null })
       return {}
     },
     template: '<ChangeItemActions />'
   })
 }
 
-export const AddressCaseCreated: Story = {
+export const MultipleChangeCaseCreated: Story = {
   render: () => ({
     components: { ChangeItemActions },
     setup() {
@@ -34,13 +34,13 @@ export const AddressCaseCreated: Story = {
       const changeCaseStore = useChangeCaseStore()
       policyStore.$patch({ policyDetail: mockPolicyDetail })
       changeCaseStore.$patch({
-        selectedChangeItem: '001',
+        selectedChangeItems: ['001', '002'],
         changeCase: {
           policyNo: 'P000000001',
           policySeq: 1,
           changeCaseNo: 'C1150710001',
           acceptanceStatus: 'P',
-          changeItem: '001'
+          changeItems: ['001', '002']
         }
       })
       return {}

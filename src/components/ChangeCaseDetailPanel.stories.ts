@@ -8,11 +8,8 @@ const meta = {
   component: ChangeCaseDetailPanel,
   args: {
     detail: mockChangeCaseDetail,
-    approveMode: true,
-    pending: true,
-    loading: false,
-    onCancel: fn(),
-    onComplete: fn()
+    viewMode: 'fields',
+    onClose: fn()
   }
 } satisfies Meta<typeof ChangeCaseDetailPanel>
 
@@ -22,7 +19,11 @@ type Story = StoryObj<typeof meta>
 export const PendingReview: Story = {}
 
 export const QueryOnly: Story = {
+  args: {}
+}
+
+export const FileSnapshot: Story = {
   args: {
-    approveMode: false
+    viewMode: 'files'
   }
 }

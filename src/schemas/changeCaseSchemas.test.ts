@@ -53,7 +53,7 @@ describe('change case schemas', () => {
   })
 
   it('requires nonnegative main amount', () => {
-    const result = mainAmountChangeSchema.safeParse({ masterInsuredAmount: -1 })
+    const result = mainAmountChangeSchema.safeParse({ insuredAmount: -1 })
 
     expect(result.success).toBe(false)
     expect(firstSchemaMessage(result)).toBe('主約保額不可小於 0')

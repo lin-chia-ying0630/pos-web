@@ -4,9 +4,6 @@ export const mockPolicyDetail: PolicyDetail = {
   master: {
     policyNo: 'P000000001',
     policySeq: 1,
-    mainProductCode: 'LIFE',
-    mainPolicyYears: 20,
-    insuredAmount: 1000000,
     premium: 12345.6789
   },
   communicationAddress: {
@@ -84,8 +81,8 @@ export const mockChangeCases: PolicyChangeCase[] = [
     changeCaseNo: 'C1150710001',
     acceptanceStatus: 'P',
     acceptanceStatusDescription: '受理中',
-    changeItems: '001',
-    changeItemDescriptions: '地址變更'
+    changeItems: '001,002',
+    changeItemDescriptions: '地址變更,主約保額變更'
   },
   {
     policyNo: 'P000000001',
@@ -108,6 +105,7 @@ export const mockChangeCaseDetail: PolicyChangeCaseDetail = {
       changeCaseNo: 'C1150710001',
       changeItem: '001',
       changeField: 'full_width_address',
+      chineseName: '中文地址',
       changeKey: '01',
       contentBefore: '臺北市中正區重慶南路一段 100 號',
       contentAfter: '臺北市中正區重慶南路一段 200 號',

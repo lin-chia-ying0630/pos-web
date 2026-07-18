@@ -24,7 +24,7 @@ function openDialog(addressType: string, dialogMessage = '') {
       policySeq: 1,
       changeCaseNo: 'C1150712001',
       acceptanceStatus: 'P',
-      changeItem: '001'
+      changeItems: ['001']
     }
   })
   addressStore.$patch({

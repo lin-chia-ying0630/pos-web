@@ -24,7 +24,7 @@ function openAmountDialog(type: 'main' | 'rider') {
       policySeq: 1,
       changeCaseNo: 'C1150712002',
       acceptanceStatus: 'P',
-      changeItem: type === 'main' ? '002' : '003'
+      changeItems: [type === 'main' ? '002' : '003']
     }
   })
   amountStore.openAmountDialog(type)

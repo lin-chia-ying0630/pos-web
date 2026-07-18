@@ -2,7 +2,7 @@
   <section class="login-view">
     <form class="login-form" @submit.prevent="login">
       <div>
-        <p class="eyebrow">POS Security</p>
+        <p class="eyebrow">身分驗證</p>
         <h2>登入保全變更作業</h2>
         <p class="login-hint">請使用經辦或覆核帳號登入，系統會依角色顯示可執行功能。</p>
       </div>

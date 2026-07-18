@@ -2,6 +2,30 @@
 
 `pos-web` 是 POS 保全變更作業的前端畫面，提供保單查詢、保全變更新增、保全案件查詢與覆核操作。README 前段以使用者與 IT 可理解的功能流程為主，後段再描述設計風格、架構與開發工具。
 
+### Cloudflare Quick Tunnel 測試
+
+Vite 開發伺服器已允許 `trycloudflare.com` 子網域，供短期外部弱點掃描使用。啟動前端後執行：
+
+```bash
+cloudflared tunnel --url http://localhost:5173
+```
+
+只使用測試資料與測試帳號；掃描完成按 `Ctrl+C` 關閉 Tunnel。正式環境不使用 Vite 開發伺服器。
+
+## Docker 正式模式與資料庫備份
+
+Docker Compose 預設使用 `prod` profile 並要求 HTTPS。TLS 由外部反向代理或 Cloudflare 終止，Nginx 將原始 HTTPS 狀態傳給 API。請先將 `.env.example` 複製為 `.env`，填入正式環境密碼與帳號。
+
+若只在本機直接使用 Vite 或直接呼叫 `8081`，請使用 local profile 與 `POS_SECURITY_REQUIRE_HTTPS=false`；正式公開環境不可使用此設定。
+
+```bash
+docker compose up -d
+./backup-mysql.sh
+./restore-mysql.sh ./backups/main-YYYYMMDD-HHMMSS.sql.gz
+```
+
+備份檔含保單與保全資料，應存放在受權限控管的加密儲存，不應提交 Git 或公開下載。現行正式登入仍由 Spring Security 的環境變數帳號提供 Basic Authentication；若要接公司 AD、LDAP 或 OIDC，應依實際身份服務另行導入，不應把密碼寫入資料庫明文。
+
 ## 畫面說明
 
 ### 整體作業流程
@@ -10,16 +34,18 @@
 flowchart LR
     A["輸入保單號碼與序號"] --> B["查詢保單"]
     B --> C["顯示保單主檔與地址資料"]
-    C --> D["選擇變更項目"]
-    D --> E["資料庫原子取得案號，尚未建檔"]
-    E --> F{"變更項目"}
+    C --> D["複選一至多個變更項目"]
+    D --> E{"最近相同項目為 P-受理中？"}
+    E -->|是| O["顯示正在受理中，無法申請"]
+    E -->|否| P["資料庫原子取得一個案號並保留所選項目，尚未建檔"]
+    P --> F{"逐項修改"}
     F --> G["001 地址變更"]
     F --> H["002 主約保額變更"]
     F --> I["003 附約保額變更"]
     G --> J["儲存異動"]
     H --> J
     I --> J
-    J --> K["建立 P-受理中草稿"]
+    J --> K["建立一筆 P-受理中與多筆變更項目草稿"]
     K --> L["覆核展開異動前後值"]
     L --> M["S-完成並套用"]
     L --> N["C-取消不套用"]
@@ -32,8 +58,9 @@ flowchart LR
 - `MAKER`：新增、查詢與儲存保全變更。
 - `REVIEWER`：查詢案件明細並完成或取消案件。
 - 帳號密碼只保留在目前瀏覽器記憶體，重新整理後需重新登入。
-- 後端關閉 Security 時回傳 `local-development`，畫面顯示「本機開發模式／經辦與覆核」。
+- Security 預設開啟；只有本機明確關閉時才回傳 `local-development`，畫面顯示「本機開發模式／經辦與覆核」。
 - 左側選單固定顯示目前使用者與中文角色；不同角色只看到可執行功能。
+- 案件會記錄建檔人與覆核人；建檔經辦不可覆核自己的案件。
 
 ### 左側選單
 
@@ -53,7 +80,7 @@ flowchart LR
 - 主附約資料。
 - 可選擇的變更項目。
 
-使用者選擇 `001`、`002` 或 `003` 後點擊 `產生案號`。後端只在流水號表保留案號；直到儲存時確認有實際異動，才建立 `P - 受理中`、變更項目、欄位與檔案資料。
+使用者可用核取方塊複選 `001`、`002`、`003`，再點擊 `產生案號`。系統先以保單號碼、保單序號與各保全變更項目查詢最近一筆案件；只要其中一項仍為 `P - 受理中`，便顯示「此保單正在受理中，無法申請」且不產生新案號。最近案件為完成、取消或沒有歷史案件時才可申請。所有勾選項目共用同一個案號，畫面保留各項目的修改按鈕，讓使用者逐項完成；直到第一個實際異動儲存時才建立一筆 `P - 受理中`。
 
 ### 001 地址變更 Dialog
 
@@ -91,7 +118,7 @@ flowchart TD
     B --> C["輸入變更後主約保額"]
     C --> D["檢核保額不可小於 0"]
     D --> E["儲存 002 異動"]
-    E --> F["覆核完成時更新主檔與主約列"]
+    E --> F["覆核完成時更新主約列"]
     F --> G["後端重算總保費"]
 ```
 
@@ -130,7 +157,15 @@ stateDiagram-v2
     C --> [*]
 ```
 
-覆核頁與查詢頁共用清單呈現。使用者必須先點擊明細圖示，查看每個 `changeField / changeKey` 及異動前後值；只有覆核頁的明細區會顯示狀態操作：
+覆核頁與查詢頁共用清單呈現。使用者必須先點擊明細圖示查看異動前後值。`002` 顯示主附約檔主約列的完整快照，包括主附約類型、序號、險種、年期、保額與保費；有快照時不再重複顯示單一欄位表格。只有覆核頁的明細區會顯示狀態操作：
+
+每筆案件提供兩個眼睛按鈕：「查看異動欄位」與「查看異動檔案」。兩者分別使用 Dialog 顯示，不在案件清單頁直接展開全部內容。
+
+覆核頁初始時兩個眼睛都可檢視，取消與確認按鈕維持鎖定。使用者分別開啟並關閉兩個 Dialog 後才可取消或確認；案件完成或取消後，兩個操作按鈕不再顯示。
+
+資料列快照不直接顯示整段 JSON，而是依 JSON key 拆成一格一個欄位，並顯示「中文名稱、JSON key、異動前、異動後」。中文名稱由後端 `CodeDescription` 的 `CHT-code` 群組提供。
+
+逐欄異動與資料列快照使用相同的 `CHT-code` 中文名稱；英文資料庫欄位名只作為次要小字顯示。
 
 - 改為 `S - 完成`：後端將變更內容套用到保單主檔、主附約或地址資料。
 - 改為 `C - 取消`：後端只更新案件狀態，不套用異動資料。
@@ -185,6 +220,7 @@ stateDiagram-v2
 ## 設計風格
 
 - 畫面以作業型系統為主，採左側選單與右側工作區，避免過度裝飾。
+- 網頁語系固定為臺灣繁體中文（`zh-TW`）；標題、導覽、按鈕、提示與錯誤訊息皆使用繁體中文，產品代碼、API 欄位與通用技術縮寫除外。
 - 查詢、建立案號、儲存、覆核等主要動作使用清楚按鈕與狀態訊息。
 - 地址與保額編輯使用 Dialog，避免使用者離開目前保單上下文。
 - 欄位檢核先在前端提示，後端仍保留最終資料檢核。
@@ -263,7 +299,7 @@ Request payload 不要包 `ResponseBodyDto`。
 
 `002` 與 `003` 共用同一個保額 Dialog，由模式決定行為：
 
-- `amountDialogType = 'main'`：顯示主檔保額，並呼叫主約保額 API。
+- `amountDialogType = 'main'`：顯示主附約檔的主約列，並呼叫主約保額 API。
 - `amountDialogType = 'rider'`：顯示附約清單，並呼叫附約保額 API。
 
 附約保額 payload 必須包含 `rideOrder`，這是後端用來更新正確資料列的 key。
@@ -271,6 +307,16 @@ Request payload 不要包 `ResponseBodyDto`。
 ## API 與畫面註解
 
 `src/api/posChange.ts` 的每個 API wrapper 上方或函式內第一行應保留簡短註解，標示對應畫面或 Dialog，例如：
+
+## 資安弱點驗證來源
+
+- [Google OSV.dev／OSV-Scanner](https://google.github.io/osv-scanner/)：依 `package-lock.json` 掃描直接與間接套件弱點。
+- [npm Audit](https://docs.npmjs.com/cli/commands/npm-audit/)：使用 npm 官方 Advisory 驗證前端依賴。
+- [GitHub Advisory Database／Dependabot](https://docs.github.com/en/code-security/concepts/supply-chain-security/dependabot-alerts)：repository 啟用 Alerts 後持續監控新公布弱點。
+- [NIST NVD](https://nvd.nist.gov/)：查核 CVE、CVSS、CWE 與受影響版本。
+- [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/)：後端 Maven SCA 與 NVD 對照。
+
+完整掃描報告與原始 JSON 集中存放於後端 `pos-change-api/logs/`，該目錄不提交 Git。依賴掃描不能取代 XSS、權限、CORS、安全標頭與動態滲透測試。
 
 - 新增保全變更頁。
 - 地址變更 Dialog。
@@ -296,21 +342,21 @@ Request payload 不要包 `ResponseBodyDto`。
 
 ```mermaid
 flowchart TD
-    A["使用者"] --> B["Vue Router"]
-    B --> C["Views: Create / Query / Review"]
-    C --> D["Components: 查詢面板 / Dialog / 清單"]
-    D --> E["Pinia: auth / workflow / policy / changeCase / dialog stores"]
-    E --> F["Zod schemas: 欄位檢核"]
-    E --> G["API wrappers: posChange.ts"]
-    G --> H["Axios httpClient: ResponseBodyDto unwrap"]
-    H --> I["Vite 或 nginx 的 /api proxy"]
+    A["使用者"] --> B["Vue 路由"]
+    B --> C["頁面：新增 / 查詢 / 覆核"]
+    C --> D["元件：查詢面板 / 對話框 / 清單"]
+    D --> E["Pinia：登入 / 流程 / 保單 / 變更案件 / 對話框 Store"]
+    E --> F["Zod Schema：欄位檢核"]
+    E --> G["API 包裝函式：posChange.ts"]
+    G --> H["Axios httpClient：解析 ResponseBodyDto"]
+    H --> I["Vite 或 nginx 的 /api 代理"]
     I --> J["pos-change-api Spring Boot"]
-    K["Storybook stories"] --> D
-    K --> L["MSW handlers"]
-    M["Vitest + Vue Test Utils"] --> D
+    K["Storybook 元件情境"] --> D
+    K --> L["MSW 處理器"]
+    M["Vitest + Vue Test Utils 測試"] --> D
     M --> F
     M --> L
-    N["Playwright E2E"] --> B
+    N["Playwright 端對端測試"] --> B
 ```
 
 正式畫面流程以 `Vue Router -> Views -> Components -> Pinia -> Zod/API -> Backend` 為主；測試與 Storybook 透過 MSW 模擬後端，避免只為看元件就必須啟動後端。
@@ -346,10 +392,12 @@ flowchart TD
 前端 Docker image 使用多階段建置：
 
 1. `node:24-alpine` 執行 `npm ci` 與 `npm run build`。
-2. `nginx:1.29-alpine` 提供靜態檔案。
+2. `nginxinc/nginx-unprivileged:1.30.4-alpine-slim` 以非 root 身分提供靜態檔案。
 3. `nginx.conf` 將 `/api/` 代理到 `http://pos-change-api:8081/api/`。
 
-Security 模式由執行中的後端決定，同一份前端 image 可搭配開啟或關閉 Security 的 API，不需要為權限模式重新 build。
+建置、執行與 Compose 的 MySQL 8.4 LTS 映像都固定 image digest，避免相同 tag 在不同時間取得不同內容；更新映像時須同步執行弱點掃描並提交新的 digest。
+
+Security 模式由執行中的後端決定，同一份前端 image 不需要為權限模式重新 build。正式部署必須保持 Security 與 TLS 開啟；Nginx 已加入 CSP、禁止 iframe、Referrer-Policy、HSTS 與 API 每 IP 限流。
 
 建置 image：
 
@@ -360,7 +408,7 @@ docker build -t anilin906622/pos-web:latest .
 本機執行：
 
 ```bash
-docker run --rm -p 8080:80 anilin906622/pos-web:latest
+docker run --rm -p 127.0.0.1:8080:8080 anilin906622/pos-web:latest
 ```
 
 若要讓容器內 nginx 連到另一個後端位置，需調整 `nginx.conf` 或在部署平台以同名 service `pos-change-api:8081` 提供後端。
@@ -373,7 +421,7 @@ docker run --rm -p 8080:80 anilin906622/pos-web:latest
 cp .env.example .env
 ```
 
-修改 `.env` 的 MySQL 密碼後執行：
+修改 `.env` 的 MySQL、MAKER 與 REVIEWER 帳密後執行。兩組系統密碼至少 12 個字元且帳號不可相同：
 
 ```bash
 docker compose up --build
@@ -384,6 +432,8 @@ docker compose up --build
 - 前端：`http://localhost:8080`
 - API：`http://localhost:8081`
 - MySQL：`localhost:3307`
+
+Compose 使用 MySQL 8.4 LTS。三個服務只綁定 `127.0.0.1`；API 與前端容器使用唯讀 root filesystem、`no-new-privileges` 與最小 Linux capabilities。
 
 停止服務：
 

@@ -3,7 +3,7 @@
     <section class="workspace">
       <header class="topbar">
         <div>
-          <p class="eyebrow">POS Change</p>
+          <p class="eyebrow">保全變更系統</p>
           <h1>保全變更作業</h1>
         </div>
         <div v-if="changeCaseStore.changeCase && route.name !== 'login'" class="case-badge">

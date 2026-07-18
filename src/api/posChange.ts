@@ -3,9 +3,6 @@ import { request } from './httpClient'
 export type PolicyMaster = {
   policyNo: string
   policySeq: number
-  mainProductCode: string
-  mainPolicyYears: number
-  insuredAmount: number
   premium: number
 }
 
@@ -50,7 +47,17 @@ export type ChangeCase = {
   policySeq: number
   changeCaseNo: string
   acceptanceStatus: string
+  changeItems: string[]
+}
+
+export type ChangeCaseEligibility = {
+  policyNo: string
+  policySeq: number
   changeItem: string
+  eligible: boolean
+  latestChangeCaseNo: string | null
+  latestAcceptanceStatus: string | null
+  message: string
 }
 
 export type PolicyChangeCase = {
@@ -70,6 +77,7 @@ export type PolicyChangeField = {
   changeCaseNo: string
   changeItem: string
   changeField: string
+  chineseName: string
   changeKey: string | null
   contentBefore: string | null
   contentAfter: string | null
@@ -87,8 +95,16 @@ export type PolicyChangeFile = {
   changeKey: string | null
   contentBefore: string | null
   contentAfter: string | null
+  snapshotFields: PolicyChangeSnapshotField[]
   createdAt: string | null
   updatedAt: string | null
+}
+
+export type PolicyChangeSnapshotField = {
+  jsonKey: string
+  chineseName: string
+  contentBefore: string | null
+  contentAfter: string | null
 }
 
 export type PolicyChangeCaseDetail = {
@@ -137,12 +153,20 @@ export function findPostalCodeArea(postalCode: string, timeoutMs = 2000) {
   })
 }
 
-export function createChangeCase(policyNo: string, policySeq: number, changeItem: string) {
+export function createChangeCase(policyNo: string, policySeq: number, changeItems: string[]) {
   // 畫面對應：新增保全變更頁「產生案號」按鈕，只取得案號，實際有異動時才存保全受理資料。
   return request<ChangeCase>({
     method: 'POST',
     url: '/api/change-cases',
-    data: { policyNo, policySeq, changeItem }
+    data: { policyNo, policySeq, changeItems }
+  })
+}
+
+export function checkChangeCaseEligibility(policyNo: string, policySeq: number, changeItem: string) {
+  // 畫面對應：產生案號前確認同一保單、序號與變更項目的最近案件不是 P-受理中。
+  return request<ChangeCaseEligibility>({
+    method: 'GET',
+    url: `/api/policies/${encodeURIComponent(policyNo)}/${policySeq}/change-items/${encodeURIComponent(changeItem)}/eligibility`
   })
 }
 
@@ -169,7 +193,7 @@ export function saveMainAmountChange(payload: {
   policyNo: string
   policySeq: number
   changeCaseNo: string
-  masterInsuredAmount: number
+  insuredAmount: number
 }) {
   // 畫面對應：002 主約保額變更 Dialog 儲存。
   const { changeCaseNo, ...requestBody } = payload

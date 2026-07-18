@@ -14,6 +14,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Quick Tunnel 每次會產生不同的 trycloudflare.com 子網域；只允許該網域，不關閉 Host 檢查。
+    allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/api': {
         target: 'http://localhost:8081',

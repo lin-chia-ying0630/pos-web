@@ -22,19 +22,19 @@
             </label>
             <label>
               <span>主約險種</span>
-              <input :value="policyStore.policyDetail?.master.mainProductCode ?? '-'" disabled />
+              <input :value="mainRide?.productCode ?? '-'" disabled />
             </label>
             <label>
               <span>主約年期</span>
-              <input :value="policyStore.policyDetail?.master.mainPolicyYears ?? '-'" disabled />
+              <input :value="mainRide?.policyYears ?? '-'" disabled />
             </label>
             <label>
               <span>目前保額</span>
-              <input :value="formatNumber(policyStore.policyDetail?.master.insuredAmount ?? 0, 2)" disabled />
+              <input :value="formatNumber(mainRide?.insuredAmount ?? 0, 2)" disabled />
             </label>
             <label>
               <span>變更後保額</span>
-              <input v-model.number="amountStore.amountForm.masterInsuredAmount" type="number" min="0" step="0.01" />
+              <input v-model.number="amountStore.amountForm.insuredAmount" type="number" min="0" step="0.01" />
             </label>
             <label>
               <span>總保費</span>
@@ -95,6 +95,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Save, X } from '@lucide/vue'
 import { useAmountChangeStore } from '../stores/amountChangeStore'
 import { usePolicyStore } from '../stores/policyStore'
@@ -104,4 +105,5 @@ import { formatNumber } from '../utils/format'
 const amountStore = useAmountChangeStore()
 const policyStore = usePolicyStore()
 const workflow = useWorkflowStore()
+const mainRide = computed(() => policyStore.policyDetail?.rideList.find((ride) => ride.rideOrder === '000'))
 </script>

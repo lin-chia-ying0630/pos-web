@@ -8,12 +8,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: npm audit --audit-level=high
       - run: npm run format:check
       - run: npm run lint
       - run: npm run test:unit
@@ -21,3 +22,5 @@ jobs:
       - run: npm run build-storybook
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - name: Build container image
+        run: docker build --tag pos-web:ci .

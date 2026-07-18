@@ -33,6 +33,7 @@ async function mockApi(page: Page) {
       return json(route, mockPolicyDetail)
     }
     if (request.method() === 'POST' && url.pathname === '/api/change-cases') {
+      const body = request.postDataJSON() as { changeItems: string[] }
       return json(
         route,
         {
@@ -40,13 +41,16 @@ async function mockApi(page: Page) {
           policySeq: 1,
           changeCaseNo,
           acceptanceStatus: 'P',
-          changeItem: '001'
+          changeItems: body.changeItems
         },
         201
       )
     }
     if (request.method() === 'POST' && url.pathname === `/api/change-cases/${changeCaseNo}/address-change`) {
       return json(route, { changeCaseNo, changeItem: '001', changedFieldCount: 1 })
+    }
+    if (request.method() === 'POST' && url.pathname === `/api/change-cases/${changeCaseNo}/main-amount-change`) {
+      return json(route, { changeCaseNo, changeItem: '002', changedFieldCount: 1 })
     }
     if (request.method() === 'GET' && url.pathname === '/api/policies/P000000001/change-cases') {
       return json(route, [
@@ -56,8 +60,8 @@ async function mockApi(page: Page) {
           changeCaseNo,
           acceptanceStatus,
           acceptanceStatusDescription: acceptanceStatus === 'P' ? '受理中' : '完成',
-          changeItems: '001',
-          changeItemDescriptions: '地址變更'
+          changeItems: '001,002',
+          changeItemDescriptions: '地址變更,主約保額變更'
         }
       ])
     }
@@ -74,7 +78,7 @@ async function mockApi(page: Page) {
         policySeq: 1,
         changeCaseNo,
         acceptanceStatus,
-        appliedItemCount: 1
+        appliedItemCount: 2
       })
     }
     await route.abort()
@@ -85,13 +89,19 @@ test.beforeEach(async ({ page }) => {
   await mockApi(page)
 })
 
-test('creates an address draft only after a real change', async ({ page }) => {
+test('uses one case number for two selected changes', async ({ page }) => {
   await page.goto('/change/create')
   await page.getByRole('button', { name: /查詢/ }).click()
   await expect(page.getByText('查詢完成')).toBeVisible()
 
-  await page.getByLabel('變更項目').selectOption('001')
+  await page.getByRole('checkbox', { name: '001 - 地址變更' }).check()
+  await page.getByRole('checkbox', { name: '002 - 主約保額變更' }).check()
   await page.getByRole('button', { name: '產生案號' }).click()
+  await expect(page.getByText(changeCaseNo, { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '地址變更' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '主約保額變更' })).toBeVisible()
+
+  await page.getByRole('button', { name: '地址變更' }).click()
   await expect(page.getByRole('heading', { name: '保單地址' })).toBeVisible()
 
   await page.getByRole('textbox', { name: '地址', exact: true }).fill('臺北市中正區重慶南路一段２號')
@@ -99,19 +109,39 @@ test('creates an address draft only after a real change', async ({ page }) => {
 
   await expect(page.getByText('通訊地址已儲存，異動欄位 1 筆')).toBeVisible()
   await expect(page.getByRole('heading', { name: '保單地址' })).toBeHidden()
+
+  await page.getByRole('button', { name: '主約保額變更' }).click()
+  await page.getByRole('spinbutton', { name: '變更後保額' }).fill('1100000')
+  await page.getByRole('button', { name: '儲存' }).click()
+  await expect(page.getByText('主約保額變更已儲存，異動欄位 1 筆')).toBeVisible()
 })
 
 test('requires review detail before completing a case', async ({ page }) => {
   await page.goto('/change/review')
   await page.getByRole('button', { name: '查詢受理資料' }).click()
-  await page.getByRole('button', { name: '查看異動明細' }).click()
+  await expect(page.getByRole('button', { name: '查看異動欄位' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '查看異動檔案' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '確認完成' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: '取消案件' })).toBeDisabled()
+  await page.getByRole('button', { name: '查看異動欄位' }).click()
 
-  await expect(page.getByText('full_width_address / 01')).toBeVisible()
+  await expect(page.getByText('full_width_address')).toBeVisible()
+  await expect(page.getByText('01', { exact: true })).toBeVisible()
   await expect(page.getByText('臺北市中正區重慶南路一段 200 號')).toBeVisible()
+  await page.getByRole('button', { name: '關閉' }).click()
+  await expect(page.getByRole('button', { name: '確認完成' })).toBeDisabled()
+
+  await page.getByRole('button', { name: '查看異動檔案' }).click()
+  await expect(page.getByRole('heading', { name: '異動檔案' })).toBeVisible()
+  await page.getByRole('button', { name: '關閉' }).click()
+  await expect(page.getByRole('button', { name: '確認完成' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: '取消案件' })).toBeEnabled()
 
   page.once('dialog', (dialog) => dialog.accept())
   await page.getByRole('button', { name: '確認完成' }).click()
   await expect(page.getByText(`${changeCaseNo} 已完成並套用異動`)).toBeVisible()
+  await expect(page.getByRole('button', { name: '確認完成' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '取消案件' })).toHaveCount(0)
 })
 
 test('redirects to login and shows the authenticated role when backend security is enabled', async ({ page }) => {

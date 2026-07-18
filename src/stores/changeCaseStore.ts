@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import {
   createChangeCase,
+  checkChangeCaseEligibility,
   findChangeCaseDetail,
   findChangeCases,
   updateChangeCaseStatus,
@@ -14,7 +15,7 @@ import { useWorkflowStore } from './workflowStore'
 export const useChangeCaseStore = defineStore('changeCase', {
   state: () => ({
     changeCase: null as ChangeCase | null,
-    selectedChangeItem: '',
+    selectedChangeItems: [] as string[],
     changeCases: [] as PolicyChangeCase[],
     reviewSearched: false,
     selectedDetailCaseNo: '',
@@ -23,15 +24,20 @@ export const useChangeCaseStore = defineStore('changeCase', {
   actions: {
     resetDraft() {
       this.changeCase = null
-      this.selectedChangeItem = ''
+      this.selectedChangeItems = []
     },
     async createSelectedCase() {
       const policyStore = usePolicyStore()
       const workflow = useWorkflowStore()
-      if (!policyStore.policyDetail || !this.selectedChangeItem) return null
+      if (!policyStore.policyDetail || this.selectedChangeItems.length === 0) return null
       const { policyNo, policySeq } = policyStore.policyDetail.master
       return workflow.run(async () => {
-        this.changeCase = await createChangeCase(policyNo, policySeq, this.selectedChangeItem)
+        const eligibilityList = await Promise.all(
+          this.selectedChangeItems.map((changeItem) => checkChangeCaseEligibility(policyNo, policySeq, changeItem))
+        )
+        const blocked = eligibilityList.find((eligibility) => !eligibility.eligible)
+        if (blocked) throw new Error(blocked.message || '此保單正在受理中，無法申請')
+        this.changeCase = await createChangeCase(policyNo, policySeq, this.selectedChangeItems)
         workflow.setMessage(`已建立變更案號 ${this.changeCase.changeCaseNo}`)
         return this.changeCase
       })
@@ -46,12 +52,7 @@ export const useChangeCaseStore = defineStore('changeCase', {
         workflow.setMessage(`查詢完成，共 ${this.changeCases.length} 筆保全受理資料`)
       })
     },
-    async toggleDetail(caseItem: PolicyChangeCase) {
-      if (this.selectedDetailCaseNo === caseItem.changeCaseNo) {
-        this.selectedDetailCaseNo = ''
-        this.reviewDetail = null
-        return
-      }
+    async loadDetail(caseItem: PolicyChangeCase) {
       const workflow = useWorkflowStore()
       await workflow.run(async () => {
         this.reviewDetail = await findChangeCaseDetail(caseItem.policyNo, caseItem.policySeq, caseItem.changeCaseNo)

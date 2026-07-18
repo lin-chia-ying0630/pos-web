@@ -1,33 +1,28 @@
 <template>
   <section v-if="policyStore.policyDetail" class="action-panel">
-    <label>
-      <span>變更項目</span>
-      <select v-model="changeCaseStore.selectedChangeItem">
-        <option value="" disabled>請選擇</option>
-        <option v-for="item in policyStore.policyDetail.changeItems" :key="item.codeBefore" :value="item.codeBefore">
-          {{ item.codeBefore }} - {{ item.codeDescription }}
-        </option>
-      </select>
-    </label>
+    <fieldset class="change-item-picker" :disabled="Boolean(changeCaseStore.changeCase)">
+      <legend>變更項目</legend>
+      <label v-for="item in policyStore.policyDetail.changeItems" :key="item.codeBefore" class="change-item-option">
+        <input v-model="changeCaseStore.selectedChangeItems" type="checkbox" :value="item.codeBefore" />
+        <span>{{ item.codeBefore }} - {{ item.codeDescription }}</span>
+      </label>
+    </fieldset>
     <button
       class="primary-button"
-      :disabled="!changeCaseStore.selectedChangeItem || workflow.loading"
+      :disabled="
+        changeCaseStore.selectedChangeItems.length === 0 || Boolean(changeCaseStore.changeCase) || workflow.loading
+      "
       @click="createSelectedCase"
     >
       <Plus :size="18" />
       <span>產生案號</span>
     </button>
-    <button
-      v-if="changeCaseStore.changeCase?.changeItem === '001'"
-      class="secondary-button"
-      type="button"
-      @click="addressStore.openAddressDialog"
-    >
+    <button v-if="hasChangeItem('001')" class="secondary-button" type="button" @click="addressStore.openAddressDialog">
       <PencilLine :size="18" />
       <span>地址變更</span>
     </button>
     <button
-      v-if="changeCaseStore.changeCase?.changeItem === '002'"
+      v-if="hasChangeItem('002')"
       class="secondary-button"
       type="button"
       @click="amountStore.openAmountDialog('main')"
@@ -36,7 +31,7 @@
       <span>主約保額變更</span>
     </button>
     <button
-      v-if="changeCaseStore.changeCase?.changeItem === '003'"
+      v-if="hasChangeItem('003')"
       class="secondary-button"
       type="button"
       @click="amountStore.openAmountDialog('rider')"
@@ -63,8 +58,13 @@ const workflow = useWorkflowStore()
 
 async function createSelectedCase() {
   const changeCase = await changeCaseStore.createSelectedCase()
-  if (changeCase?.changeItem === '001') addressStore.openAddressDialog()
-  if (changeCase?.changeItem === '002') amountStore.openAmountDialog('main')
-  if (changeCase?.changeItem === '003') amountStore.openAmountDialog('rider')
+  if (changeCase?.changeItems.length !== 1) return
+  if (changeCase.changeItems[0] === '001') addressStore.openAddressDialog()
+  if (changeCase.changeItems[0] === '002') amountStore.openAmountDialog('main')
+  if (changeCase.changeItems[0] === '003') amountStore.openAmountDialog('rider')
+}
+
+function hasChangeItem(changeItem: string) {
+  return changeCaseStore.changeCase?.changeItems.includes(changeItem) ?? false
 }
 </script>

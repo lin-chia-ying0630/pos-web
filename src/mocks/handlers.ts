@@ -16,6 +16,39 @@ export const handlers = [
       }
     })
   }),
+  http.post('/api/change-cases', async ({ request }) => {
+    const body = (await request.json()) as { policyNo: string; policySeq: number; changeItems: string[] }
+    return HttpResponse.json({
+      success: true,
+      message: '執行成功',
+      massageCode: '',
+      errorMessage: '',
+      data: {
+        policyNo: body.policyNo,
+        policySeq: body.policySeq,
+        changeCaseNo: 'C1150710003',
+        acceptanceStatus: 'P',
+        changeItems: body.changeItems
+      }
+    })
+  }),
+  http.get('/api/policies/:policyNo/:policySeq/change-items/:changeItem/eligibility', ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      message: '查詢成功',
+      massageCode: 'SUCCESS',
+      errorMessage: '',
+      data: {
+        policyNo: String(params.policyNo),
+        policySeq: Number(params.policySeq),
+        changeItem: String(params.changeItem),
+        eligible: true,
+        latestChangeCaseNo: null,
+        latestAcceptanceStatus: null,
+        message: ''
+      }
+    })
+  }),
   http.get('/api/policies/:policyNo/change-cases', () => {
     return HttpResponse.json({
       success: true,
