@@ -344,14 +344,16 @@ h2 {
 
 .detail-grid:has(.query-table) {
   grid-template-columns: minmax(0, 1fr);
+  margin: 16px auto 0;
+  max-width: 1100px;
 }
 .query-table .query-field {
   border-width: 0 0 1px;
   border-radius: 0;
   display: grid;
-  gap: 16px;
+  gap: 12px;
   grid-template-columns: minmax(180px, 1fr) minmax(260px, 1.5fr);
-  padding: 16px 12px;
+  padding: 12px;
 }
 .query-table .query-field dt {
   align-self: center;
@@ -372,7 +374,7 @@ h2 {
 .query-columns,
 .query-table .query-field {
   display: grid;
-  gap: 18px;
+  gap: 12px;
   grid-template-columns: minmax(220px, 1fr) minmax(320px, 2fr);
 }
 
