@@ -1,5 +1,6 @@
 <template>
   <section class="work-view">
+    <PolicySearchPanel />
     <div class="section-heading">
       <div>
         <p class="eyebrow">USER AUTHORIZATION</p>
@@ -21,6 +22,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { findUserAuthorizationPermissions, type CodeDescription } from '../api/posChange'
+import PolicySearchPanel from '../components/PolicySearchPanel.vue'
 import StatusMessage from '../components/StatusMessage.vue'
 
 const permissions = ref<CodeDescription[]>([])
