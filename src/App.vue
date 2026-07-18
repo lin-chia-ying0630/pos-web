@@ -29,6 +29,10 @@
             <Search :size="18" />
             <span>查詢保全變更</span>
           </RouterLink>
+          <RouterLink class="side-menu-item" to="/policy/query">
+            <Search :size="18" />
+            <span>查詢保單主檔</span>
+          </RouterLink>
           <RouterLink v-if="authStore.hasRole('REVIEWER')" class="side-menu-item" to="/change/review">
             <FileText :size="18" />
             <span>覆核</span>

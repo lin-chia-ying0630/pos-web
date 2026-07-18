@@ -5,6 +5,7 @@ import LoginView from '../views/LoginView.vue'
 import QueryChangeView from '../views/QueryChangeView.vue'
 import ReviewChangeView from '../views/ReviewChangeView.vue'
 import UserAuthorizationView from '../views/UserAuthorizationView.vue'
+import PolicyQueryView from '../views/PolicyQueryView.vue'
 import { useAuthStore } from '../stores/authStore'
 
 export const router = createRouter({
@@ -14,6 +15,7 @@ export const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/change/create', name: 'change-create', component: CreateChangeView, meta: { role: 'MAKER' } },
     { path: '/change/query', name: 'change-query', component: QueryChangeView },
+    { path: '/policy/query', name: 'policy-query', component: PolicyQueryView },
     { path: '/change/review', name: 'change-review', component: ReviewChangeView, meta: { role: 'REVIEWER' } },
     { path: '/user/authorization', name: 'user-authorization', component: UserAuthorizationView }
   ]
