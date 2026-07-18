@@ -387,15 +387,13 @@ h2 {
 
 .query-table .query-field dt,
 .query-table .query-field dd {
+  color: #1f2933;
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .query-table .query-field dt {
-  font-weight: 700;
-}
-
-.query-table .query-field dd {
-  font-weight: 600;
+  color: #647281;
 }
 
 .work-content,
@@ -626,6 +624,9 @@ input.invalid {
 
 .case-table-row strong,
 .case-table-row span {
+  color: #1f2933;
+  font-size: 0.9rem;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
