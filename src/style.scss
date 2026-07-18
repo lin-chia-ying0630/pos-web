@@ -381,7 +381,21 @@ h2 {
 .query-columns-head {
   background: #eef3f6;
   color: #647281;
+  font-size: 1rem;
   padding: 12px;
+}
+
+.query-table .query-field dt,
+.query-table .query-field dd {
+  font-size: 0.9rem;
+}
+
+.query-table .query-field dt {
+  font-weight: 700;
+}
+
+.query-table .query-field dd {
+  font-weight: 600;
 }
 
 .work-content,
