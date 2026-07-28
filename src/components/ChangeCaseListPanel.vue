@@ -15,99 +15,87 @@
       </button>
     </div>
 
-    <div
+    <ScrollableRecordTable
       v-if="changeCaseStore.changeCases.length > 0"
-      class="case-table change-case-table"
-      :class="approveMode ? 'approve-case-table' : 'query-case-table'"
+      :columns="changeCaseColumns"
+      :rows="changeCaseRows"
     >
-      <div class="case-table-head" :style="changeCaseGridStyle">
-        <span v-for="key in changeCaseColumnKeys" :key="key">{{ chtLabel(key) }}</span>
-        <template v-if="approveMode">
-          <span>{{ chtLabel('operation') }}</span>
-        </template>
-        <template v-else>
-          <span>{{ chtLabel('changedFieldNames') }}</span>
-          <span>{{ chtLabel('changedRecordTypes') }}</span>
-        </template>
-      </div>
-      <template v-for="caseItem in pagedChangeCases" :key="caseItem.changeCaseNo">
-        <div class="case-table-row" :style="changeCaseGridStyle">
-          <span v-for="key in changeCaseColumnKeys" :key="key">
-            {{ displayChangeCaseValue(caseItem, key) }}
-          </span>
-          <template v-if="!approveMode">
-            <span class="query-view-action">
-              <button
-                class="icon-button"
-                :class="{ viewed: viewedFields.has(caseItem.changeCaseNo) }"
-                type="button"
-                title="查看異動欄位"
-                aria-label="查看異動欄位"
-                @click="openDetail(caseItem, 'fields')"
-              >
-                <Eye :size="18" />
-              </button>
-            </span>
-            <span class="query-view-action">
-              <button
-                class="icon-button"
-                :class="{ viewed: viewedFiles.has(caseItem.changeCaseNo) }"
-                type="button"
-                title="查看異動檔案"
-                aria-label="查看異動檔案"
-                @click="openDetail(caseItem, 'files')"
-              >
-                <Eye :size="18" />
-              </button>
-            </span>
-          </template>
-          <div v-else class="case-actions">
+      <template #cell="{ row, column, index }">
+        <template v-if="column.key === 'changedFieldNames'">
+          <span class="query-view-action">
             <button
               class="icon-button"
-              :class="{ viewed: viewedFields.has(caseItem.changeCaseNo) }"
+              :class="{ viewed: viewedFields.has(changeCaseFromRow(row).changeCaseNo) }"
               type="button"
               title="查看異動欄位"
               aria-label="查看異動欄位"
-              @click="openDetail(caseItem, 'fields')"
+              @click="openDetail(changeCaseFromRow(row), 'fields')"
             >
               <Eye :size="18" />
             </button>
+          </span>
+        </template>
+        <template v-else-if="column.key === 'changedRecordTypes'">
+          <span class="query-view-action">
             <button
               class="icon-button"
-              :class="{ viewed: viewedFiles.has(caseItem.changeCaseNo) }"
+              :class="{ viewed: viewedFiles.has(changeCaseFromRow(row).changeCaseNo) }"
               type="button"
               title="查看異動檔案"
               aria-label="查看異動檔案"
-              @click="openDetail(caseItem, 'files')"
+              @click="openDetail(changeCaseFromRow(row), 'files')"
             >
               <Eye :size="18" />
             </button>
-            <template v-if="isPendingStatus(caseItem.acceptanceStatus)">
-              <button
-                class="icon-button danger-action"
-                type="button"
-                :disabled="workflow.loading || !reviewReady(caseItem.changeCaseNo)"
-                :title="reviewReady(caseItem.changeCaseNo) ? '取消案件' : '請先查看異動欄位與異動檔案'"
-                aria-label="取消案件"
-                @click="confirmStatus(caseItem, 'C')"
-              >
-                <X :size="18" />
-              </button>
-              <button
-                class="icon-button confirm-action"
-                type="button"
-                :disabled="workflow.loading || !reviewReady(caseItem.changeCaseNo)"
-                :title="reviewReady(caseItem.changeCaseNo) ? '確認完成' : '請先查看異動欄位與異動檔案'"
-                aria-label="確認完成"
-                @click="confirmStatus(caseItem, 'S')"
-              >
-                <Check :size="18" />
-              </button>
-            </template>
-          </div>
+          </span>
+        </template>
+        <div v-else-if="column.key === 'operation'" class="case-actions">
+          <button
+            class="icon-button"
+            :class="{ viewed: viewedFields.has(changeCaseFromRow(row).changeCaseNo) }"
+            type="button"
+            title="查看異動欄位"
+            aria-label="查看異動欄位"
+            @click="openDetail(changeCaseFromRow(row), 'fields')"
+          >
+            <Eye :size="18" />
+          </button>
+          <button
+            class="icon-button"
+            :class="{ viewed: viewedFiles.has(changeCaseFromRow(row).changeCaseNo) }"
+            type="button"
+            title="查看異動檔案"
+            aria-label="查看異動檔案"
+            @click="openDetail(changeCaseFromRow(row), 'files')"
+          >
+            <Eye :size="18" />
+          </button>
+          <template v-if="isPendingStatus(changeCaseFromRow(row).acceptanceStatus)">
+            <button
+              class="icon-button danger-action"
+              type="button"
+              :disabled="workflow.loading || !reviewReady(changeCaseFromRow(row).changeCaseNo)"
+              :title="reviewReady(changeCaseFromRow(row).changeCaseNo) ? '取消案件' : '請先查看異動欄位與異動檔案'"
+              aria-label="取消案件"
+              @click="confirmStatus(changeCaseFromRow(row), 'C')"
+            >
+              <X :size="18" />
+            </button>
+            <button
+              class="icon-button confirm-action"
+              type="button"
+              :disabled="workflow.loading || !reviewReady(changeCaseFromRow(row).changeCaseNo)"
+              :title="reviewReady(changeCaseFromRow(row).changeCaseNo) ? '確認完成' : '請先查看異動欄位與異動檔案'"
+              aria-label="確認完成"
+              @click="confirmStatus(changeCaseFromRow(row), 'S')"
+            >
+              <Check :size="18" />
+            </button>
+          </template>
         </div>
+        <template v-else>{{ row.values[index] ?? '-' }}</template>
       </template>
-    </div>
+    </ScrollableRecordTable>
     <p v-else-if="changeCaseStore.reviewSearched" class="empty-text">查無保全受理資料</p>
     <PaginationBar
       :page="currentPage"
@@ -154,6 +142,10 @@ import ChangeCaseDetailPanel from './ChangeCaseDetailPanel.vue'
 import PaginationBar from './PaginationBar.vue'
 import { useChtFieldNames } from '../composables/useChtFieldNames'
 import ConfirmActionDialog from './ConfirmActionDialog.vue'
+import ScrollableRecordTable, {
+  type ScrollableRecordColumn,
+  type ScrollableRecordRow
+} from './ScrollableRecordTable.vue'
 
 const { approveMode } = defineProps<{
   approveMode: boolean
@@ -181,15 +173,26 @@ const pagedChangeCases = computed(() => {
 // 欄位直接依受理資料 API 的 key 展開；檢視／覆核按鈕是純 UI 欄位，另外附加。
 const changeCaseColumnKeys = computed(() => {
   const first = pagedChangeCases.value[0] ?? changeCaseStore.changeCases[0]
-  return first ? Object.keys(first) : []
+  return first ? Object.keys(first).filter((key) => key !== 'changedFieldNames' && key !== 'changedRecordTypes') : []
 })
-const changeCaseGridStyle = computed(() => {
-  const count = changeCaseColumnKeys.value.length + (approveMode ? 1 : 2)
-  return {
-    gridTemplateColumns: `repeat(${count}, minmax(150px, 1fr))`,
-    minWidth: `${count * 150}px`
-  }
-})
+const changeCaseDisplayKeys = computed(() => [
+  ...changeCaseColumnKeys.value,
+  ...(approveMode ? ['operation'] : ['changedFieldNames', 'changedRecordTypes'])
+])
+const changeCaseColumns = computed<ScrollableRecordColumn[]>(() =>
+  changeCaseDisplayKeys.value.map((key) => ({ key, label: key }))
+)
+const changeCaseRows = computed<ScrollableRecordRow[]>(() =>
+  pagedChangeCases.value.map((caseItem) => ({
+    key: caseItem.changeCaseNo,
+    values: changeCaseDisplayKeys.value.map((key) =>
+      key === 'operation' || key === 'changedFieldNames' || key === 'changedRecordTypes'
+        ? ''
+        : displayChangeCaseValue(caseItem, key)
+    ),
+    data: caseItem
+  }))
+)
 onMounted(loadChtLabels)
 
 function loadChangeCases() {
@@ -254,5 +257,8 @@ function displayChangeCaseValue(caseItem: PolicyChangeCase, key: string) {
   if (value == null || value === '') return '-'
   if (Array.isArray(value)) return value.join('、') || '-'
   return typeof value === 'object' ? JSON.stringify(value) : String(value)
+}
+function changeCaseFromRow(row: ScrollableRecordRow) {
+  return row.data as PolicyChangeCase
 }
 </script>

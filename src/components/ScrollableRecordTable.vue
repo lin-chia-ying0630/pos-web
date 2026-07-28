@@ -6,20 +6,23 @@
         chtLabel(column.key || column.label)
       }}</strong>
     </div>
-    <div v-for="row in rows" :key="row.key" class="query-record-row shared-record-grid" :style="gridStyle">
-      <span
-        v-for="(column, index) in columns"
-        :key="column.key || column.label"
-        :class="[column.className, { 'numeric-field': column.numeric }]"
-      >
-        <slot name="cell" :row="row" :column="column" :index="index">
-          <slot v-if="column.slot" :name="`cell-${column.slot}`" :row="row" :column="column" :index="index">
-            {{ row.values[index] ?? '-' }}
+    <template v-for="row in rows" :key="row.key">
+      <div class="query-record-row shared-record-grid" :style="gridStyle">
+        <span
+          v-for="(column, index) in columns"
+          :key="column.key || column.label"
+          :class="[column.className, { 'numeric-field': column.numeric }]"
+        >
+          <slot name="cell" :row="row" :column="column" :index="index">
+            <slot v-if="column.slot" :name="`cell-${column.slot}`" :row="row" :column="column" :index="index">
+              {{ row.values[index] ?? '-' }}
+            </slot>
+            <template v-else>{{ row.values[index] ?? '-' }}</template>
           </slot>
-          <template v-else>{{ row.values[index] ?? '-' }}</template>
-        </slot>
-      </span>
-    </div>
+        </span>
+      </div>
+      <slot name="after-row" :row="row" />
+    </template>
   </div>
 </template>
 
@@ -57,21 +60,29 @@ const widthVariable: Record<FieldWidthToken, string> = {
   'field-width-wide': 'var(--field-width-wide)'
 }
 
-function inferredWidthToken(column: ScrollableRecordColumn, index: number): FieldWidthToken {
-  if (column.widthToken) return column.widthToken
-  if (column.slot === 'actions') return 'field-width-wide'
-  const maximumLength = Math.max(
-    column.label.length,
-    ...props.rows.map((row) => String(row.values[index] ?? '').length)
+function visualLength(value: unknown) {
+  // 中文與全形字元約佔兩個英數字寬度；用實際 API 內容估算，避免日期、人名與按鈕互相重疊。
+  return [...String(value ?? '')].reduce((length, character) => length + (/[\u2e80-\uffff]/.test(character) ? 2 : 1), 0)
+}
+
+function measuredColumn(column: ScrollableRecordColumn, index: number) {
+  if (column.widthToken) {
+    return { minimum: widthVariable[column.widthToken], weight: column.widthToken === 'field-width-wide' ? 3 : 1 }
+  }
+  const contentLength = Math.max(
+    visualLength(column.label),
+    ...props.rows.map((row) => visualLength(row.values[index] ?? ''))
   )
-  if (column.numeric || maximumLength <= 10) return 'field-width-compact'
-  return maximumLength <= 32 ? 'field-width-normal' : 'field-width-wide'
+  const operationColumn = column.key === 'operation' || column.slot === 'actions'
+  const minimumPixels = operationColumn ? 260 : Math.min(440, Math.max(120, contentLength * 9 + 40))
+  return { minimum: `${minimumPixels}px`, weight: Math.max(1, Math.min(4, contentLength / 12)) }
 }
 
 const gridStyle = computed(() => {
-  // 後端只提供型態與容量；前端 utility 換成語意 token，實際像素統一由 SCSS design token 控制。
-  const widths = props.columns.map((column, index) => widthVariable[inferredWidthToken(column, index)])
-  const tracks = widths.map((width) => `minmax(${width}, 1fr)`)
+  // 欄寬依表頭與整頁 API 資料的最長顯示內容統一計算；資料超出視窗時由共用容器提供橫向拉軸。
+  const measurements = props.columns.map(measuredColumn)
+  const tracks = measurements.map(({ minimum, weight }) => `minmax(${minimum}, ${weight}fr)`)
+  const widths = measurements.map(({ minimum }) => minimum)
   const tableMinimumWidth = `calc(${widths.join(' + ')} + ${Math.max(props.columns.length - 1, 0) * 12 + 28}px)`
   return {
     gridTemplateColumns: tracks.join(' '),

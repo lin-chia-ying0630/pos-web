@@ -291,3 +291,6 @@ docker compose config
 - 權限分工：Maker 可新增、修改、刪除；Reviewer 可查詢、覆核。
 - Code 對照表的操作欄由 Maker 與 Reviewer 共用：Maker 可使用修改、刪除，Reviewer 可使用覆核；沒有對應權限的按鈕保留顯示但停用。Reviewer 覆核會呼叫 `PATCH /api/user-authorizations/codes/{group}/{field}/{before}/review`。
 - Code 查詢先選 `main-code.code_field`，再以下拉選擇該群組的 `code_before`；不得在前端另建固定代碼清單。
+- 所有主功能頁使用同一個 `.panel` 白色卡片容器與 `.panel-title`（圖示、中文標題、分隔線）；不得讓單一頁面直接裸露在灰色工作區。
+- 所有 API 清單一律使用 `ScrollableRecordTable`；不得在 View 內另寫表頭、資料列 Grid 或固定欄寬。
+- 共用表格以中文表頭與當頁 API 資料的最長顯示內容計算欄寬（中文／全形字以兩個英數字寬估算）；總寬超出容器時顯示橫向拉軸，不得讓相鄰欄位重疊。

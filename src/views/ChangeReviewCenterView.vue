@@ -29,39 +29,34 @@
       </label>
       <button class="primary-button" type="button" @click="searchReviews(1)"><Search :size="18" />查詢覆核資料</button>
     </div>
-    <div v-if="reviews.length" class="case-table review-center-table">
-      <div class="case-table-head" :style="reviewGridStyle">
-        <span v-for="key in reviewColumnKeys" :key="key">{{ chtLabel(key) }}</span>
-      </div>
-      <template v-for="review in reviews" :key="review.reviewKey">
-        <div class="case-table-row" :style="reviewGridStyle">
-          <span v-for="key in reviewColumnKeys" :key="key">
-            <button
-              v-if="key === 'reviewDetail'"
-              class="icon-button"
-              type="button"
-              title="查看資料詳細內容"
-              @click="openDetail(review)"
-            >
-              <Eye :size="18" />
-            </button>
-            <template v-else-if="key === 'reviewStatus'">
-              {{ statusLabel(review.reviewStatus) }}
-              <small v-if="review.reviewRemark">{{ review.reviewRemark }}</small>
-            </template>
-            <span v-else-if="key === 'operation'" class="review-actions">
-              <button type="button" @click="togglePreview(review)">
-                {{ selectedReviewKey === review.reviewKey ? '收合' : '預覽' }}
-              </button>
-              <template v-if="review.reviewStatus === 'P'">
-                <button type="button" @click="decide(review, 'S')">確認</button>
-                <button type="button" @click="decide(review, 'C')">取消</button>
-              </template>
-            </span>
-            <template v-else>{{ displayReviewValue(review, key) }}</template>
-          </span>
-        </div>
-        <section v-if="selectedReviewKey === review.reviewKey" class="review-audit-preview">
+    <ScrollableRecordTable v-if="reviews.length" :columns="reviewColumns" :rows="reviewRows">
+      <template #cell="{ row, column, index }">
+        <button
+          v-if="column.key === 'reviewDetail'"
+          class="icon-button"
+          type="button"
+          title="查看資料詳細內容"
+          @click="openDetail(reviewFromRow(row))"
+        >
+          <Eye :size="18" />
+        </button>
+        <template v-else-if="column.key === 'reviewStatus'">
+          {{ statusLabel(reviewFromRow(row).reviewStatus) }}
+          <small v-if="reviewFromRow(row).reviewRemark">{{ reviewFromRow(row).reviewRemark }}</small>
+        </template>
+        <span v-else-if="column.key === 'operation'" class="review-actions">
+          <button type="button" @click="togglePreview(reviewFromRow(row))">
+            {{ selectedReviewKey === reviewFromRow(row).reviewKey ? '收合' : '預覽' }}
+          </button>
+          <template v-if="reviewFromRow(row).reviewStatus === 'P'">
+            <button type="button" @click="decide(reviewFromRow(row), 'S')">確認</button>
+            <button type="button" @click="decide(reviewFromRow(row), 'C')">取消</button>
+          </template>
+        </span>
+        <template v-else>{{ row.values[index] ?? '-' }}</template>
+      </template>
+      <template #after-row="{ row }">
+        <section v-if="selectedReviewKey === reviewFromRow(row).reviewKey" class="review-audit-preview">
           <h3>覆核稽核歷程</h3>
           <p v-if="auditLoading">歷程載入中…</p>
           <div v-else-if="selectedAudits.length" class="review-audit-list">
@@ -90,7 +85,7 @@
           <p v-else>目前尚無稽核歷程</p>
         </section>
       </template>
-    </div>
+    </ScrollableRecordTable>
     <p v-else-if="searched" class="empty-text">目前尚無符合條件的覆核資料</p>
     <PaginationBar
       :page="currentPage"
@@ -152,6 +147,10 @@ import ReviewFieldComparisonTable, { type ReviewComparisonField } from '../compo
 import { flattenReviewContent, hasDetailValue, parseReviewContent } from '../utils/reviewDetail'
 import { formatDateTime } from '../utils/format'
 import RejectRemarkDialog from '../components/RejectRemarkDialog.vue'
+import ScrollableRecordTable, {
+  type ScrollableRecordColumn,
+  type ScrollableRecordRow
+} from '../components/ScrollableRecordTable.vue'
 
 const codes = ref<CodeDescription[]>([])
 const route = useRoute()
@@ -180,10 +179,18 @@ const reviewColumnKeys = computed(() => {
     'operation'
   ]
 })
-const reviewGridStyle = computed(() => ({
-  gridTemplateColumns: `repeat(${reviewColumnKeys.value.length}, minmax(150px, 1fr))`,
-  minWidth: `${reviewColumnKeys.value.length * 150}px`
-}))
+const reviewColumns = computed<ScrollableRecordColumn[]>(() =>
+  reviewColumnKeys.value.map((key) => ({ key, label: key }))
+)
+const reviewRows = computed<ScrollableRecordRow[]>(() =>
+  reviews.value.map((review) => ({
+    key: review.reviewKey,
+    values: reviewColumnKeys.value.map((key) =>
+      key === 'reviewDetail' || key === 'operation' ? '' : displayReviewValue(review, key)
+    ),
+    data: review
+  }))
+)
 const functionCodes = computed(() => codes.value.filter((item) => item.codeBefore.startsWith('M')))
 const reviewStatuses = ['P', 'S', 'C']
 // Key1 依功能資料來源對應第一個主要 Key；MCM00001 對應 code_definition.code_group。
@@ -226,6 +233,9 @@ function displayReviewValue(review: ChangeReview, key: string) {
   if (key.endsWith('At')) return formatDateTime(String(value))
   if (Array.isArray(value)) return value.join('、') || '-'
   return typeof value === 'object' ? JSON.stringify(value) : String(value)
+}
+function reviewFromRow(row: ScrollableRecordRow) {
+  return row.data as ChangeReview
 }
 
 onMounted(async () => {

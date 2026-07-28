@@ -1,10 +1,8 @@
 <template>
-  <section class="work-view">
-    <div class="panel-heading">
-      <div>
-        <p class="eyebrow">USER AUTHORIZATION</p>
-        <h2>使用者授權</h2>
-      </div>
+  <section class="panel authorization-panel">
+    <div class="panel-title">
+      <UserCog :size="18" />
+      <h2>使用者授權</h2>
       <div v-if="canMaintain" class="authorization-actions">
         <button class="primary-button" type="button" @click="openCreate">新增使用者</button>
         <button class="primary-button" type="button" @click="openScreenAssignment">設定畫面授權</button>
@@ -243,7 +241,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Eye } from '@lucide/vue'
+import { Eye, UserCog } from '@lucide/vue'
 import {
   createUserAccount,
   findFunctionCodes,

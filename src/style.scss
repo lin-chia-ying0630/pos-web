@@ -503,6 +503,14 @@ h2 {
   gap: 6px;
 }
 
+.panel-title > .authorization-actions {
+  margin-left: auto;
+}
+
+.authorization-panel .authorization-hint {
+  margin-top: 16px;
+}
+
 .authorization-form {
   display: grid;
   gap: 18px;
