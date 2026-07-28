@@ -21,77 +21,23 @@
       :rows="changeCaseRows"
     >
       <template #cell="{ row, column, index }">
-        <template v-if="column.key === 'changedFieldNames'">
-          <span class="query-view-action">
-            <button
-              class="icon-button"
-              :class="{ viewed: viewedFields.has(changeCaseFromRow(row).changeCaseNo) }"
-              type="button"
-              title="查看異動欄位"
-              aria-label="查看異動欄位"
-              @click="openDetail(changeCaseFromRow(row), 'fields')"
-            >
-              <Eye :size="18" />
-            </button>
-          </span>
-        </template>
-        <template v-else-if="column.key === 'changedRecordTypes'">
-          <span class="query-view-action">
-            <button
-              class="icon-button"
-              :class="{ viewed: viewedFiles.has(changeCaseFromRow(row).changeCaseNo) }"
-              type="button"
-              title="查看異動檔案"
-              aria-label="查看異動檔案"
-              @click="openDetail(changeCaseFromRow(row), 'files')"
-            >
-              <Eye :size="18" />
-            </button>
-          </span>
-        </template>
-        <div v-else-if="column.key === 'operation'" class="case-actions">
+        <div
+          v-if="isActionColumn(column.key ?? column.label)"
+          :class="column.key === 'operation' ? 'case-actions' : 'query-view-action'"
+        >
           <button
+            v-for="action in actionsFor(column.key ?? column.label, changeCaseFromRow(row))"
+            :key="action.key"
             class="icon-button"
-            :class="{ viewed: viewedFields.has(changeCaseFromRow(row).changeCaseNo) }"
+            :class="actionClass(action, changeCaseFromRow(row))"
             type="button"
-            title="查看異動欄位"
-            aria-label="查看異動欄位"
-            @click="openDetail(changeCaseFromRow(row), 'fields')"
+            :disabled="actionDisabled(action, changeCaseFromRow(row))"
+            :title="actionTitle(action, changeCaseFromRow(row))"
+            :aria-label="action.label"
+            @click="runAction(action, changeCaseFromRow(row))"
           >
-            <Eye :size="18" />
+            <component :is="action.icon" :size="18" />
           </button>
-          <button
-            class="icon-button"
-            :class="{ viewed: viewedFiles.has(changeCaseFromRow(row).changeCaseNo) }"
-            type="button"
-            title="查看異動檔案"
-            aria-label="查看異動檔案"
-            @click="openDetail(changeCaseFromRow(row), 'files')"
-          >
-            <Eye :size="18" />
-          </button>
-          <template v-if="isPendingStatus(changeCaseFromRow(row).acceptanceStatus)">
-            <button
-              class="icon-button danger-action"
-              type="button"
-              :disabled="workflow.loading || !reviewReady(changeCaseFromRow(row).changeCaseNo)"
-              :title="reviewReady(changeCaseFromRow(row).changeCaseNo) ? '取消案件' : '請先查看異動欄位與異動檔案'"
-              aria-label="取消案件"
-              @click="confirmStatus(changeCaseFromRow(row), 'C')"
-            >
-              <X :size="18" />
-            </button>
-            <button
-              class="icon-button confirm-action"
-              type="button"
-              :disabled="workflow.loading || !reviewReady(changeCaseFromRow(row).changeCaseNo)"
-              :title="reviewReady(changeCaseFromRow(row).changeCaseNo) ? '確認完成' : '請先查看異動欄位與異動檔案'"
-              aria-label="確認完成"
-              @click="confirmStatus(changeCaseFromRow(row), 'S')"
-            >
-              <Check :size="18" />
-            </button>
-          </template>
         </div>
         <template v-else>{{ row.values[index] ?? '-' }}</template>
       </template>
@@ -146,6 +92,7 @@ import ScrollableRecordTable, {
   type ScrollableRecordColumn,
   type ScrollableRecordRow
 } from './ScrollableRecordTable.vue'
+import type { Component } from 'vue'
 
 const { approveMode } = defineProps<{
   approveMode: boolean
@@ -193,6 +140,53 @@ const changeCaseRows = computed<ScrollableRecordRow[]>(() =>
     data: caseItem
   }))
 )
+
+type CaseAction = {
+  key: 'fields' | 'files' | 'cancel' | 'approve'
+  columns: string[]
+  label: string
+  icon: Component
+  detailMode?: 'fields' | 'files'
+  status?: 'C' | 'S'
+  className?: string
+  pendingOnly?: boolean
+}
+
+// 特殊欄位也以設定陣列搭配 v-for 產生；新增操作只需增加一筆設定，不再擴寫模板判斷。
+const caseActions: CaseAction[] = [
+  {
+    key: 'fields',
+    columns: ['changedFieldNames', 'operation'],
+    label: '查看異動欄位',
+    icon: Eye,
+    detailMode: 'fields'
+  },
+  {
+    key: 'files',
+    columns: ['changedRecordTypes', 'operation'],
+    label: '查看異動檔案',
+    icon: Eye,
+    detailMode: 'files'
+  },
+  {
+    key: 'cancel',
+    columns: ['operation'],
+    label: '取消案件',
+    icon: X,
+    status: 'C',
+    className: 'danger-action',
+    pendingOnly: true
+  },
+  {
+    key: 'approve',
+    columns: ['operation'],
+    label: '確認完成',
+    icon: Check,
+    status: 'S',
+    className: 'confirm-action',
+    pendingOnly: true
+  }
+]
 onMounted(loadChtLabels)
 
 function loadChangeCases() {
@@ -260,5 +254,37 @@ function displayChangeCaseValue(caseItem: PolicyChangeCase, key: string) {
 }
 function changeCaseFromRow(row: ScrollableRecordRow) {
   return row.data as PolicyChangeCase
+}
+
+function isActionColumn(columnKey: string) {
+  return caseActions.some((action) => action.columns.includes(columnKey))
+}
+
+function actionsFor(columnKey: string, caseItem: PolicyChangeCase) {
+  return caseActions.filter(
+    (action) =>
+      action.columns.includes(columnKey) && (!action.pendingOnly || isPendingStatus(caseItem.acceptanceStatus))
+  )
+}
+
+function actionClass(action: CaseAction, caseItem: PolicyChangeCase) {
+  const viewed =
+    (action.key === 'fields' && viewedFields.value.has(caseItem.changeCaseNo)) ||
+    (action.key === 'files' && viewedFiles.value.has(caseItem.changeCaseNo))
+  return [action.className, { viewed }]
+}
+
+function actionDisabled(action: CaseAction, caseItem: PolicyChangeCase) {
+  return Boolean(action.status && (workflow.loading || !reviewReady(caseItem.changeCaseNo)))
+}
+
+function actionTitle(action: CaseAction, caseItem: PolicyChangeCase) {
+  if (action.status && !reviewReady(caseItem.changeCaseNo)) return '請先查看異動欄位與異動檔案'
+  return action.label
+}
+
+function runAction(action: CaseAction, caseItem: PolicyChangeCase) {
+  if (action.detailMode) return openDetail(caseItem, action.detailMode)
+  if (action.status) confirmStatus(caseItem, action.status)
 }
 </script>
