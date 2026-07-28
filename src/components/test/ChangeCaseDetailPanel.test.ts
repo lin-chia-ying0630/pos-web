@@ -64,8 +64,9 @@ describe('ChangeCaseDetailPanel', () => {
       props: { detail, viewMode: 'files' }
     })
 
-    expect(wrapper.findAll('.change-detail-row:not(.change-detail-head)')).toHaveLength(0)
-    expect(wrapper.findAll('.snapshot-field-row:not(.snapshot-field-head)')).toHaveLength(8)
+    // 異動檔案與異動欄位共用 ReviewFieldComparisonTable，不再保留第二套 snapshot row。
+    expect(wrapper.findAll('.change-detail-row:not(.change-detail-head)')).toHaveLength(8)
+    expect(wrapper.findAll('.snapshot-field-row')).toHaveLength(0)
     expect(wrapper.text()).toContain('002 policy_coverage')
     expect(wrapper.text()).toContain('險種代碼')
     expect(wrapper.text()).toContain('年期')

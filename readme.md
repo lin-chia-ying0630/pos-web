@@ -670,3 +670,6 @@ npm run build-storybook
 - 主功能頁統一使用共用白色 `.panel` 與 `.panel-title`；使用者授權、覆核中心、代碼及保單畫面不得各自建立不同的外框與表頭。
 - API 清單統一由 `ScrollableRecordTable` 動態展開。共用元件會依中文表頭及當頁資料內容長度分配欄寬；內容較長時擴大該欄，總寬超過畫面時改用橫向拉軸。
 - 清單的眼睛、確認與取消等特殊操作由設定陣列描述，並以 `v-for` 共用產生；新增操作不再複製另一段按鈕模板。
+- 所有彈窗共用 `DialogShell` 管理遮罩、標題、關閉、內容捲動與 footer；地址、保額、案件明細不得自行重做彈窗骨架。
+- 異動欄位與異動檔案的前後值都由 `ReviewFieldComparisonTable` 顯示，資料來源只需轉成共用 `ReviewComparisonField`。
+- API 的空值、陣列、物件與一般值統一經 `formatDisplayValue` 顯示；各 View 不再重複實作 `null`、空字串及 `JSON.stringify` 判斷。

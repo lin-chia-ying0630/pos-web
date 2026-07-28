@@ -295,3 +295,6 @@ docker compose config
 - 所有 API 清單一律使用 `ScrollableRecordTable`；不得在 View 內另寫表頭、資料列 Grid 或固定欄寬。
 - 共用表格以中文表頭與當頁 API 資料的最長顯示內容計算欄寬（中文／全形字以兩個英數字寬估算）；總寬超出容器時顯示橫向拉軸，不得讓相鄰欄位重疊。
 - 特殊操作欄以設定陣列描述按鈕、圖示、可見條件與事件，再由 `v-for` 產生；不得為每個操作複製一段 `v-if` 按鈕模板。
+- 所有彈窗必須使用 `DialogShell`；頁面只提供 title、subtitle、內容及 footer，不得重複實作 backdrop、header、close、scroll 與 actions。
+- 所有異動前後比較使用 `ReviewFieldComparisonTable`；不同 API 結構先轉成 `ReviewComparisonField[]`，不得再建立另一套比較表。
+- API 通用值顯示使用 `formatDisplayValue`；空值文字可由參數指定，View 不得重複撰寫空值、陣列與物件格式化邏輯。

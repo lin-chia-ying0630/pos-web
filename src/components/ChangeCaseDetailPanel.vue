@@ -1,72 +1,45 @@
 <template>
-  <div class="dialog-backdrop" @click.self="$emit('close')">
-    <section class="dialog change-detail-dialog">
-      <header class="dialog-header">
-        <div>
-          <h2>{{ viewMode === 'fields' ? '異動欄位' : '異動檔案' }}</h2>
-          <span>{{ detail.changeCase.changeCaseNo }}</span>
-        </div>
-        <button class="icon-button" type="button" title="關閉" aria-label="關閉" @click="$emit('close')">
-          <X :size="18" />
-        </button>
-      </header>
+  <DialogShell
+    :title="viewMode === 'fields' ? '異動欄位' : '異動檔案'"
+    :subtitle="detail.changeCase.changeCaseNo"
+    dialog-class="change-detail-dialog"
+    @close="$emit('close')"
+  >
+    <div class="change-detail-heading">
+      <span>{{ detail.changeCase.changeItemCodeDescriptions || detail.changeCase.changeItemCodes }}</span>
+    </div>
 
-      <div class="dialog-body">
-        <div class="change-detail-heading">
-          <span>{{ detail.changeCase.changeItemCodeDescriptions || detail.changeCase.changeItemCodes }}</span>
-        </div>
+    <div v-if="viewMode === 'fields' && changedFieldNameGroups.length" class="change-field-groups">
+      <section v-for="group in changedFieldNameGroups" :key="group.changeItemCode" class="change-field-group">
+        <h4>變更項目 {{ group.changeItemCode }}</h4>
+        <ReviewFieldComparisonTable :fields="group.displayFields" />
+      </section>
+    </div>
+    <p v-else-if="viewMode === 'fields'" class="empty-text">此案件沒有異動欄位</p>
 
-        <div v-if="viewMode === 'fields' && changedFieldNameGroups.length" class="change-field-groups">
-          <section v-for="group in changedFieldNameGroups" :key="group.changeItemCode" class="change-field-group">
-            <h4>變更項目 {{ group.changeItemCode }}</h4>
-            <ReviewFieldComparisonTable :fields="group.displayFields" />
-          </section>
+    <div v-if="viewMode === 'files' && detail.changedRecordTypes.length" class="snapshot-list">
+      <div v-for="file in detail.changedRecordTypes" :key="file.id" class="snapshot-item">
+        <div class="snapshot-title">
+          <strong>{{ file.changeItemCode }} {{ file.changedRecordType }}</strong>
+          <span>Key: {{ file.changedRecordKey || '-' }}</span>
         </div>
-        <p v-else-if="viewMode === 'fields'" class="empty-text">此案件沒有異動欄位</p>
-
-        <div v-if="viewMode === 'files' && detail.changedRecordTypes.length" class="snapshot-list">
-          <div v-for="file in detail.changedRecordTypes" :key="file.id" class="snapshot-item">
-            <div class="snapshot-title">
-              <strong>{{ file.changeItemCode }} {{ file.changedRecordType }}</strong>
-              <span>Key: {{ file.changedRecordKey || '-' }}</span>
-            </div>
-            <div class="snapshot-field-table">
-              <div class="snapshot-field-row snapshot-field-head">
-                <span>{{ chtLabel('fieldName') }}</span>
-                <span>{{ chtLabel('contentBefore') }}</span>
-                <span>{{ chtLabel('contentAfter') }}</span>
-              </div>
-              <div v-for="field in file.snapshotFields" :key="field.jsonKey" class="snapshot-field-row">
-                <span class="snapshot-field-name">
-                  <strong>{{ field.chineseName }}</strong>
-                  <small>{{ field.jsonKey }}</small>
-                </span>
-                <span>{{ displayValue(field.contentBefore) }}</span>
-                <strong>{{ displayValue(field.contentAfter) }}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p v-else-if="viewMode === 'files'" class="empty-text">此案件沒有異動檔案</p>
+        <ReviewFieldComparisonTable :fields="snapshotComparisonFields(file)" :show-key="false" />
       </div>
-    </section>
-  </div>
+    </div>
+    <p v-else-if="viewMode === 'files'" class="empty-text">此案件沒有異動檔案</p>
+  </DialogShell>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { X } from '@lucide/vue'
-import type { PolicyChangeCaseDetail } from '../api/posChange'
+import { computed } from 'vue'
+import type { PolicyChangeCaseDetail, PolicyChangeFile } from '../api/posChange'
 import ReviewFieldComparisonTable, { type ReviewComparisonField } from './ReviewFieldComparisonTable.vue'
-import { useChtFieldNames } from '../composables/useChtFieldNames'
+import DialogShell from './DialogShell.vue'
 
 const props = defineProps<{
   detail: PolicyChangeCaseDetail
   viewMode: 'fields' | 'files'
 }>()
-const { label: chtLabel, load } = useChtFieldNames()
-onMounted(load)
-
 const changedFieldNameGroups = computed(() => {
   const groups = new Map<string, PolicyChangeCaseDetail['changedFieldNames']>()
   props.detail.changedFieldNames.forEach((field) => {
@@ -111,7 +84,13 @@ defineEmits<{
   close: []
 }>()
 
-function displayValue(value: string | null) {
-  return value == null || value === '' ? '空白' : value
+function snapshotComparisonFields(file: PolicyChangeFile): ReviewComparisonField[] {
+  return file.snapshotFields.map((field) => ({
+    id: `${file.id}-${field.jsonKey}`,
+    label: field.chineseName || field.jsonKey,
+    fieldKey: field.jsonKey,
+    before: field.contentBefore,
+    after: field.contentAfter
+  }))
 }
 </script>

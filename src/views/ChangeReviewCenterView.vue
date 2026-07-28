@@ -145,7 +145,7 @@ import DialogShell from '../components/DialogShell.vue'
 import { useChtFieldNames } from '../composables/useChtFieldNames'
 import ReviewFieldComparisonTable, { type ReviewComparisonField } from '../components/ReviewFieldComparisonTable.vue'
 import { flattenReviewContent, hasDetailValue, parseReviewContent } from '../utils/reviewDetail'
-import { formatDateTime } from '../utils/format'
+import { formatDateTime, formatDisplayValue } from '../utils/format'
 import RejectRemarkDialog from '../components/RejectRemarkDialog.vue'
 import ScrollableRecordTable, {
   type ScrollableRecordColumn,
@@ -229,10 +229,8 @@ function detailLabelKey(key: string) {
 
 function displayReviewValue(review: ChangeReview, key: string) {
   const value = (review as unknown as Record<string, unknown>)[key]
-  if (value == null || value === '') return '-'
   if (key.endsWith('At')) return formatDateTime(String(value))
-  if (Array.isArray(value)) return value.join('、') || '-'
-  return typeof value === 'object' ? JSON.stringify(value) : String(value)
+  return formatDisplayValue(value)
 }
 function reviewFromRow(row: ScrollableRecordRow) {
   return row.data as ChangeReview

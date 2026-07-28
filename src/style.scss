@@ -1068,49 +1068,6 @@ input.invalid {
   grid-column: 1 / -1;
 }
 
-.case-table {
-  border: 1px solid #d9e0e8;
-  border-radius: 8px;
-  overflow-x: auto;
-}
-
-.case-table-head,
-.case-table-row {
-  align-items: center;
-  display: grid;
-  gap: 10px;
-  grid-template-columns: 170px 70px 180px 100px 110px 170px 110px 170px 110px 170px 190px;
-  min-width: 1440px;
-  min-height: var(--table-row-height);
-  padding: 10px 12px;
-}
-
-.case-table-head {
-  background: #f5f7f9;
-  color: #5f6b7a;
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.case-table-row {
-  border-top: 1px solid #edf0f3;
-}
-
-.case-table-row strong,
-.case-table-row span {
-  color: #1f2933;
-  font-size: 0.9rem;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.query-case-table .case-table-head,
-.query-case-table .case-table-row {
-  grid-template-columns: 170px 70px 180px 100px 110px 170px 110px 170px 110px 170px 90px 90px;
-  min-width: 1674px;
-}
-
-.query-case-table .case-table-head > :nth-last-child(-n + 2),
 .query-view-action {
   justify-self: center;
 }
@@ -1124,12 +1081,6 @@ input.invalid {
 .query-view-action .icon-button:hover {
   background: #ccebe6;
   border-color: #5bb8aa;
-}
-
-.review-center-table .case-table-head,
-.review-center-table .case-table-row {
-  grid-template-columns: 110px 160px minmax(300px, 1fr) 120px 140px 190px 140px 190px 140px 190px;
-  min-width: 1880px;
 }
 
 .review-actions {
@@ -1497,32 +1448,6 @@ input.invalid {
   padding-top: 14px;
 }
 
-.snapshot-field-table {
-  border: 1px solid #d9e0e8;
-  border-radius: 6px;
-  margin-top: 8px;
-  overflow: hidden;
-}
-
-.snapshot-field-row {
-  background: #ffffff;
-  display: grid;
-  gap: 12px;
-  grid-template-columns: minmax(150px, 0.8fr) repeat(2, minmax(180px, 1fr));
-  padding: 10px 12px;
-}
-
-.snapshot-field-row + .snapshot-field-row {
-  border-top: 1px solid #e5e9ee;
-}
-
-.snapshot-field-head {
-  background: #eef2f5;
-  color: #5f6b7a;
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
 .snapshot-field-name {
   display: grid;
   gap: 2px;
@@ -1531,11 +1456,6 @@ input.invalid {
 .snapshot-field-name small {
   color: #7c8795;
   font-size: 0.72rem;
-  overflow-wrap: anywhere;
-}
-
-.snapshot-field-row > span,
-.snapshot-field-row > strong {
   overflow-wrap: anywhere;
 }
 
@@ -1858,17 +1778,7 @@ h3 {
   .review-query,
   .detail-grid,
   .form-grid,
-  .change-detail-row,
-  .snapshot-field-row {
-    grid-template-columns: 1fr;
-  }
-
-  .case-table-head {
-    display: none;
-  }
-
-  .case-table-row {
-    align-items: stretch;
+  .change-detail-row {
     grid-template-columns: 1fr;
   }
 

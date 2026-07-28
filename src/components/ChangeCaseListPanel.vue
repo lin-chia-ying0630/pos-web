@@ -82,7 +82,7 @@ import type { PolicyChangeCase } from '../api/posChange'
 import { useChangeCaseStore } from '../stores/changeCaseStore'
 import { usePolicyStore } from '../stores/policyStore'
 import { useWorkflowStore } from '../stores/workflowStore'
-import { isPendingStatus, formatDateTime } from '../utils/format'
+import { isPendingStatus, formatDateTime, formatDisplayValue } from '../utils/format'
 import { POLICY_NO_MAX_LENGTH } from '../domain/domainConstraints'
 import ChangeCaseDetailPanel from './ChangeCaseDetailPanel.vue'
 import PaginationBar from './PaginationBar.vue'
@@ -248,9 +248,7 @@ function displayChangeCaseValue(caseItem: PolicyChangeCase, key: string) {
   const value = (caseItem as unknown as Record<string, unknown>)[key]
   if (key === 'acceptanceStatus') return statusDisplay(caseItem)
   if (key.endsWith('At')) return formatDateTime(value == null ? null : String(value))
-  if (value == null || value === '') return '-'
-  if (Array.isArray(value)) return value.join('、') || '-'
-  return typeof value === 'object' ? JSON.stringify(value) : String(value)
+  return formatDisplayValue(value)
 }
 function changeCaseFromRow(row: ScrollableRecordRow) {
   return row.data as PolicyChangeCase

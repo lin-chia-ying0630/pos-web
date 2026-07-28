@@ -46,6 +46,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useChtFieldNames } from '../composables/useChtFieldNames'
+import { formatDisplayValue } from '../utils/format'
 
 export type ReviewComparisonField = {
   id: string | number
@@ -64,7 +65,6 @@ const { label: chtLabel, load } = useChtFieldNames()
 onMounted(load)
 
 function displayValue(value: unknown) {
-  if (value == null || value === '') return '空白'
-  return typeof value === 'object' ? JSON.stringify(value) : String(value)
+  return formatDisplayValue(value, { emptyText: '空白' })
 }
 </script>

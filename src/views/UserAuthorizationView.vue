@@ -262,7 +262,7 @@ import ScrollableRecordTable, {
 import StatusMessage from '../components/StatusMessage.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useChtFieldNames } from '../composables/useChtFieldNames'
-import { formatDateTime } from '../utils/format'
+import { formatDateTime, formatDisplayValue } from '../utils/format'
 import { useWorkflowStore } from '../stores/workflowStore'
 
 const authStore = useAuthStore()
@@ -356,10 +356,7 @@ function isDateTimeKey(key?: string) {
   return key === 'createdAt' || key === 'updatedAt'
 }
 function displayAuthorizationRawValue(value: unknown): string | number {
-  if (value == null || value === '') return '-'
-  if (Array.isArray(value)) return value.join('、') || '-'
-  if (typeof value === 'number') return value
-  return String(value)
+  return formatDisplayValue(value)
 }
 function screenAuthorization(userId: string) {
   return screenAuthorizations.value.find((item) => item.userId === userId)

@@ -16,3 +16,14 @@ export function formatDateTime(value?: string | null) {
 export function isPendingStatus(acceptanceStatus: string) {
   return acceptanceStatus.toUpperCase() === 'P'
 }
+
+export function formatDisplayValue(
+  value: unknown,
+  options: { emptyText?: string; arraySeparator?: string } = {}
+): string | number {
+  const { emptyText = '-', arraySeparator = '、' } = options
+  if (value == null || value === '') return emptyText
+  if (Array.isArray(value)) return value.length ? value.join(arraySeparator) : emptyText
+  if (typeof value === 'object') return JSON.stringify(value)
+  return typeof value === 'number' ? value : String(value)
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatNumber, isPendingStatus } from './format'
+import { formatDisplayValue, formatNumber, isPendingStatus } from './format'
 
 describe('format utilities', () => {
   it('formats numbers with fixed digits', () => {
@@ -10,5 +10,13 @@ describe('format utilities', () => {
     expect(isPendingStatus('P')).toBe(true)
     expect(isPendingStatus('p')).toBe(true)
     expect(isPendingStatus('S')).toBe(false)
+  })
+
+  it('formats shared API display values consistently', () => {
+    expect(formatDisplayValue(null)).toBe('-')
+    expect(formatDisplayValue([], { emptyText: '空白' })).toBe('空白')
+    expect(formatDisplayValue(['A', 'B'])).toBe('A、B')
+    expect(formatDisplayValue({ key: 'value' })).toBe('{"key":"value"}')
+    expect(formatDisplayValue(12)).toBe(12)
   })
 })
