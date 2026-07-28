@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import AmountChangeDialog from './AmountChangeDialog.vue'
-import { useAmountChangeStore } from '../stores/amountChangeStore'
-import { useChangeCaseStore } from '../stores/changeCaseStore'
-import { usePolicyStore } from '../stores/policyStore'
-import { mockPolicyDetail } from '../stories/mockData'
+import AmountChangeDialog from '../AmountChangeDialog.vue'
+import { useAmountChangeStore } from '../../stores/amountChangeStore'
+import { useChangeCaseStore } from '../../stores/changeCaseStore'
+import { usePolicyStore } from '../../stores/policyStore'
+import { mockPolicyDetail } from '../../stories/mockData'
 
 const meta = {
   title: 'Components/AmountChangeDialog',
@@ -24,7 +24,7 @@ function openAmountDialog(type: 'main' | 'rider') {
       policySeq: 1,
       changeCaseNo: 'C1150712002',
       acceptanceStatus: 'P',
-      changeItems: [type === 'main' ? '002' : '003']
+      changeItemCodes: [type === 'main' ? '002' : '003']
     }
   })
   amountStore.openAmountDialog(type)

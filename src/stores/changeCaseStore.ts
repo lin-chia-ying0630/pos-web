@@ -33,7 +33,9 @@ export const useChangeCaseStore = defineStore('changeCase', {
       const { policyNo, policySeq } = policyStore.policyDetail.master
       return workflow.run(async () => {
         const eligibilityList = await Promise.all(
-          this.selectedChangeItems.map((changeItem) => checkChangeCaseEligibility(policyNo, policySeq, changeItem))
+          this.selectedChangeItems.map((changeItemCode) =>
+            checkChangeCaseEligibility(policyNo, policySeq, changeItemCode)
+          )
         )
         const blocked = eligibilityList.find((eligibility) => !eligibility.eligible)
         if (blocked) throw new Error(blocked.message || '此保單正在受理中，無法申請')

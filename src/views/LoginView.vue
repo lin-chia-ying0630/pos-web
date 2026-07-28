@@ -3,7 +3,7 @@
     <form class="login-form" @submit.prevent="login">
       <div>
         <p class="eyebrow">身分驗證</p>
-        <h2>登入保全變更作業</h2>
+        <h2>登入保單服務作業</h2>
         <p class="login-hint">請使用經辦或覆核帳號登入，系統會依角色顯示可執行功能。</p>
       </div>
       <label>
@@ -26,24 +26,24 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { LogIn } from '@lucide/vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { firstAuthorizedPath } from '../router'
 import StatusMessage from '../components/StatusMessage.vue'
 import { useAuthStore } from '../stores/authStore'
 import { useWorkflowStore } from '../stores/workflowStore'
 
 const authStore = useAuthStore()
 const workflow = useWorkflowStore()
+const route = useRoute()
 const router = useRouter()
 const form = reactive({ username: '', password: '' })
 
 async function login() {
   try {
-    const user = await authStore.login(form.username, form.password)
-    const target = user.roles.includes('MAKER')
-      ? '/change/create'
-      : user.roles.includes('REVIEWER')
-        ? '/change/review'
-        : '/change/query'
+    await authStore.login(form.username, form.password)
+    const requestedPath = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+    const resolved = requestedPath ? router.resolve(requestedPath) : null
+    const target = resolved?.name && resolved.name !== 'not-found' ? requestedPath : firstAuthorizedPath(authStore)
     await router.push(target)
   } catch {
     // workflowStore 已顯示後端回傳的登入錯誤，保留表單讓使用者修正。

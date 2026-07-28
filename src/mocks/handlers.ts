@@ -3,45 +3,74 @@ import { mockChangeCaseDetail, mockChangeCases, mockPolicyDetail } from '../stor
 
 // MSW handlers 同時供 Vitest 與 Storybook 使用，讓前端可在無後端時驗證畫面狀態。
 export const handlers = [
+  http.get('/api/field-labels', () => {
+    return HttpResponse.json({
+      success: true,
+      message: '查詢成功',
+      messageCode: 'SUCCESS',
+      errorMessage: '',
+      data: {
+        policyNo: '保單號碼',
+        policySeq: '保單序號',
+        fieldName: '欄位',
+        contentBefore: '異動前',
+        contentAfter: '異動後'
+      }
+    })
+  }),
   http.get('/api/auth/me', () => {
     return HttpResponse.json({
       success: true,
       message: '執行成功',
-      massageCode: '',
+      messageCode: '',
       errorMessage: '',
       data: {
-        username: 'local-development',
+        userId: 'local-development',
         roles: ['MAKER', 'REVIEWER'],
+        functionCodes: [
+          'MPS00001',
+          'MPS00002',
+          'MPS00003',
+          'MPM00001',
+          'MPM00002',
+          'MPM00003',
+          'MPM00004',
+          'MPM00005',
+          'MPM00006',
+          'MCM00001',
+          'MCM00002',
+          'MUS00001'
+        ],
         securityEnabled: false
       }
     })
   }),
   http.post('/api/change-cases', async ({ request }) => {
-    const body = (await request.json()) as { policyNo: string; policySeq: number; changeItems: string[] }
+    const body = (await request.json()) as { policyNo: string; policySeq: number; changeItemCodes: string[] }
     return HttpResponse.json({
       success: true,
       message: '執行成功',
-      massageCode: '',
+      messageCode: '',
       errorMessage: '',
       data: {
         policyNo: body.policyNo,
         policySeq: body.policySeq,
         changeCaseNo: 'C1150710003',
         acceptanceStatus: 'P',
-        changeItems: body.changeItems
+        changeItemCodes: body.changeItemCodes
       }
     })
   }),
-  http.get('/api/policies/:policyNo/:policySeq/change-items/:changeItem/eligibility', ({ params }) => {
+  http.get('/api/policies/:policyNo/:policySeq/change-items/:changeItemCode/eligibility', ({ params }) => {
     return HttpResponse.json({
       success: true,
       message: '查詢成功',
-      massageCode: 'SUCCESS',
+      messageCode: 'SUCCESS',
       errorMessage: '',
       data: {
         policyNo: String(params.policyNo),
         policySeq: Number(params.policySeq),
-        changeItem: String(params.changeItem),
+        changeItemCode: String(params.changeItemCode),
         eligible: true,
         latestChangeCaseNo: null,
         latestAcceptanceStatus: null,
@@ -53,7 +82,7 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       message: '查詢成功',
-      massageCode: 'SUCCESS',
+      messageCode: 'SUCCESS',
       errorMessage: '',
       data: mockChangeCases
     })
@@ -62,7 +91,7 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       message: '查詢成功',
-      massageCode: 'SUCCESS',
+      messageCode: 'SUCCESS',
       errorMessage: '',
       data: mockChangeCaseDetail
     })
@@ -71,7 +100,7 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       message: '查詢成功',
-      massageCode: 'SUCCESS',
+      messageCode: 'SUCCESS',
       errorMessage: '',
       data: mockPolicyDetail
     })
@@ -80,7 +109,7 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       message: '查詢成功',
-      massageCode: 'SUCCESS',
+      messageCode: 'SUCCESS',
       errorMessage: '',
       data: {
         postalCode: String(params.postalCode),

@@ -18,37 +18,34 @@ export const usePolicyStore = defineStore('policy', {
     communicationZip(state) {
       const address = state.policyDetail?.communicationAddress
       if (!address) return '-'
-      const zipCode3 = address.zipCode3 ?? ''
-      const zipCode2 = address.zipCode2 ? address.zipCode2.padStart(3, '0') : ''
-      return `${zipCode3}${zipCode2}` || '-'
+      return address.postalCode || '-'
     },
     availableAddresses(state) {
       const addresses = state.policyDetail?.addressList ?? []
       if (addresses.length > 0) return addresses
       return state.policyDetail?.communicationAddress ? [state.policyDetail.communicationAddress] : []
     },
-    addressTypeLabel(state) {
-      return (addressType: string) => {
-        const code = state.policyDetail?.addressTypes?.find((item) => item.codeBefore === addressType)
-        return code?.codeDescription ?? addressType
+    addressTypeCodeLabel(state) {
+      return (addressTypeCode: string) => {
+        const code = state.policyDetail?.addressTypeCodes?.find((item) => item.codeBefore === addressTypeCode)
+        return code?.codeDescription ?? addressTypeCode
       }
     }
   },
   actions: {
-    isPhysicalAddressType(addressType: string) {
-      return isPhysicalAddressType(addressType)
+    isPhysicalAddressType(addressTypeCode: string) {
+      return isPhysicalAddressType(addressTypeCode)
     },
-    isContactAddressType(addressType: string) {
-      return !isPhysicalAddressType(addressType)
+    isContactAddressType(addressTypeCode: string) {
+      return !isPhysicalAddressType(addressTypeCode)
     },
-    normalizeZipCode2(zipCode2: string | null) {
-      return zipCode2 ? zipCode2.padStart(3, '0') : ''
+    // 地址、Email、電話已分表，地址畫面只處理正式 postalCode。
+    postalCode(address: PolicyAddress) {
+      return address.postalCode
     },
     addressDisplay(address: PolicyAddress) {
-      const zip = `${address.zipCode3 ?? ''}${this.normalizeZipCode2(address.zipCode2)}`
-      const content = isPhysicalAddressType(address.addressType)
-        ? address.fullWidthAddress || '-'
-        : address.halfWidthAddress || '-'
+      const zip = this.postalCode(address)
+      const content = address.addressText || '-'
       return zip ? `${zip} ${content}` : content
     },
     async fetchPolicy(policyNo: string, policySeq: number) {

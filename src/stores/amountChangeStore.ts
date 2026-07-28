@@ -6,13 +6,19 @@ import { usePolicyStore } from './policyStore'
 import { useWorkflowStore } from './workflowStore'
 
 type AmountRideForm = {
-  rideOrder: string
-  rideType: string
+  coverageItemSeq: string
+  coverageItemType: string
   productCode: string
-  policyYears: number
+  coverageTermYears: number
   currentInsuredAmount: number
   insuredAmount: number
-  premium: number
+  premiumAmount: number
+}
+
+// 003 僅能處理附約。除了識別 RIDER，也排除壽險約定的主約序號 000，
+// 避免舊資料型態不一致時把主約顯示或送入附約異動 API。
+export function isRiderCoverage(ride: Pick<AmountRideForm, 'coverageItemSeq' | 'coverageItemType'>) {
+  return ride.coverageItemType.trim().toUpperCase() === 'RIDER' && ride.coverageItemSeq !== '000'
 }
 
 export const useAmountChangeStore = defineStore('amountChange', {
@@ -32,21 +38,24 @@ export const useAmountChangeStore = defineStore('amountChange', {
   actions: {
     openAmountDialog(type: 'main' | 'rider') {
       const policyStore = usePolicyStore()
+      const workflow = useWorkflowStore()
       if (!policyStore.policyDetail) return
       this.amountDialogType = type
       this.amountForm.rides = policyStore.policyDetail.rideList
-        .filter((ride) => (type === 'rider' ? ride.rideType !== '1' : true))
+        .filter((ride) => (type === 'rider' ? isRiderCoverage(ride) : true))
         .map((ride) => ({
-          rideOrder: ride.rideOrder,
-          rideType: ride.rideType,
+          coverageItemSeq: ride.coverageItemSeq,
+          coverageItemType: ride.coverageItemType,
           productCode: ride.productCode,
-          policyYears: ride.policyYears,
+          coverageTermYears: ride.coverageTermYears,
           currentInsuredAmount: ride.insuredAmount,
           insuredAmount: ride.insuredAmount,
-          premium: ride.premium
+          premiumAmount: ride.premiumAmount
         }))
-      const mainRide = this.amountForm.rides.find((ride) => ride.rideOrder === '000')
+      const mainRide = this.amountForm.rides.find((ride) => ride.coverageItemSeq === '000')
       this.amountForm.insuredAmount = mainRide?.insuredAmount ?? 0
+      // 開啟新的異動視窗時清除上一筆 API 錯誤，避免已修正資料後仍顯示舊訊息。
+      workflow.clearMessage()
       this.dialogMessage = ''
       this.amountDialogOpen = true
     },
@@ -88,9 +97,10 @@ export const useAmountChangeStore = defineStore('amountChange', {
           return result
         }
 
+        // 送出前再次套用業務邊界，避免 UI state 被外部程式修改後把主約送入 003。
         const validation = riderAmountChangeSchema.safeParse({
-          rides: this.amountForm.rides.map((ride) => ({
-            rideOrder: ride.rideOrder,
+          rides: this.amountForm.rides.filter(isRiderCoverage).map((ride) => ({
+            coverageItemSeq: ride.coverageItemSeq,
             insuredAmount: ride.insuredAmount
           }))
         })

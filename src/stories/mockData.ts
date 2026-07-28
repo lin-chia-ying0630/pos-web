@@ -1,63 +1,73 @@
 import type { PolicyChangeCase, PolicyChangeCaseDetail, PolicyDetail } from '../api/posChange'
 
 export const mockPolicyDetail: PolicyDetail = {
+  emailList: [],
+  phoneList: [],
   master: {
     policyNo: 'P000000001',
     policySeq: 1,
-    premium: 12345.6789
+    premiumAmount: 12345.6789,
+    currencyCode: 'TWD'
   },
   communicationAddress: {
+    addressId: '019f0000-0000-7000-8000-000000000001',
     policyNo: 'P000000001',
     policySeq: 1,
-    addressType: '01',
-    zipCode3: '100',
-    zipCode2: '001',
-    fullWidthAddress: '臺北市中正區重慶南路一段 100 號',
-    halfWidthAddress: 'Zhongzheng Dist., Taipei City'
+    addressTypeCode: '01',
+    postalCode: '100001',
+    addressText: '臺北市中正區重慶南路一段 100 號',
+    countryCode: 'TW',
+    primaryFlag: 'Y'
   },
   addressList: [
     {
+      addressId: '019f0000-0000-7000-8000-000000000001',
       policyNo: 'P000000001',
       policySeq: 1,
-      addressType: '01',
-      zipCode3: '100',
-      zipCode2: '001',
-      fullWidthAddress: '臺北市中正區重慶南路一段 100 號',
-      halfWidthAddress: 'Zhongzheng Dist., Taipei City'
+      addressTypeCode: '01',
+      postalCode: '100001',
+      addressText: '臺北市中正區重慶南路一段 100 號',
+      countryCode: 'TW',
+      primaryFlag: 'Y'
     },
     {
+      addressId: '019f0000-0000-7000-8000-000000000002',
       policyNo: 'P000000001',
       policySeq: 1,
-      addressType: '02',
-      zipCode3: '104',
-      zipCode2: null,
-      fullWidthAddress: '臺北市中山區南京東路二段 10 號',
-      halfWidthAddress: 'Zhongshan Dist., Taipei City'
+      addressTypeCode: '02',
+      postalCode: '104',
+      addressText: '臺北市中山區南京東路二段 10 號',
+      countryCode: 'TW',
+      primaryFlag: 'N'
     }
   ],
   rideList: [
     {
       policyNo: 'P000000001',
       policySeq: 1,
-      rideType: '1',
-      rideOrder: '000',
+      coverageItemType: 'BASE',
+      coverageItemSeq: '000',
       productCode: 'LIFE',
-      policyYears: 20,
+      productVersion: '1',
+      coverageTermYears: 20,
       insuredAmount: 1000000,
-      premium: 10000
+      premiumAmount: 10000,
+      currencyCode: 'TWD'
     },
     {
       policyNo: 'P000000001',
       policySeq: 1,
-      rideType: '2',
-      rideOrder: '001',
+      coverageItemType: 'RIDER',
+      coverageItemSeq: '001',
       productCode: 'ACC',
-      policyYears: 10,
+      productVersion: '1',
+      coverageTermYears: 10,
       insuredAmount: 300000,
-      premium: 2345.6789
+      premiumAmount: 2345.6789,
+      currencyCode: 'TWD'
     }
   ],
-  addressTypes: [
+  addressTypeCodes: [
     { codeBefore: '01', codeDescription: '通訊地址' },
     { codeBefore: '02', codeDescription: '戶籍地址' },
     { codeBefore: '31', codeDescription: 'email' }
@@ -67,7 +77,7 @@ export const mockPolicyDetail: PolicyDetail = {
     { codeBefore: 'S', codeDescription: '完成' },
     { codeBefore: 'C', codeDescription: '取消' }
   ],
-  changeItems: [
+  changeItemCodes: [
     { codeBefore: '001', codeDescription: '地址變更' },
     { codeBefore: '002', codeDescription: '主約保額變更' },
     { codeBefore: '003', codeDescription: '附約保額變更' }
@@ -87,8 +97,8 @@ export const mockChangeCases: PolicyChangeCase[] = [
     changeCaseNo: 'C1150710001',
     acceptanceStatus: 'P',
     acceptanceStatusDescription: '受理中',
-    changeItems: '001,002',
-    changeItemDescriptions: '地址變更,主約保額變更'
+    changeItemCodes: '001,002',
+    changeItemCodeDescriptions: '地址變更,主約保額變更'
   },
   {
     policyNo: 'P000000001',
@@ -96,28 +106,29 @@ export const mockChangeCases: PolicyChangeCase[] = [
     changeCaseNo: 'C1150710002',
     acceptanceStatus: 'S',
     acceptanceStatusDescription: '完成',
-    changeItems: '003',
-    changeItemDescriptions: '附約保額變更'
+    changeItemCodes: '003',
+    changeItemCodeDescriptions: '附約保額變更'
   }
 ]
 
 export const mockChangeCaseDetail: PolicyChangeCaseDetail = {
   changeCase: mockChangeCases[0]!,
-  changeFields: [
+  changedFieldNames: [
     {
       id: 1,
+      changeFieldId: '019f0000-0000-7000-8000-000000000101',
       policyNo: 'P000000001',
       policySeq: 1,
       changeCaseNo: 'C1150710001',
-      changeItem: '001',
-      changeField: 'full_width_address',
+      changeItemCode: '001',
+      changedFieldName: 'full_width_address',
       chineseName: '中文地址',
-      changeKey: '01',
+      changedRecordKey: '01',
       contentBefore: '臺北市中正區重慶南路一段 100 號',
       contentAfter: '臺北市中正區重慶南路一段 200 號',
       createdAt: null,
       updatedAt: null
     }
   ],
-  changeFiles: []
+  changedRecordTypes: []
 }

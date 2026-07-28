@@ -14,14 +14,18 @@ export const useAuthStore = defineStore('auth', {
     authenticated: (state) => state.initialized && (!state.securityRequired || state.currentUser !== null),
     displayName: (state) => {
       if (!state.initialized) return '確認權限中'
-      return state.securityRequired ? (state.currentUser?.username ?? '尚未登入') : '本機開發模式'
+      return state.securityRequired ? (state.currentUser?.userId ?? '尚未登入') : '本機開發模式'
     },
     roleDescription: (state) => {
       if (!state.initialized) return '請稍候'
       if (!state.securityRequired) return '經辦與覆核'
-      const labels = state.currentUser?.roles.map((role) =>
-        role === 'MAKER' ? '經辦' : role === 'REVIEWER' ? '覆核' : role
-      )
+      const roleLabels: Record<string, string> = {
+        MAKER: '經辦',
+        REVIEWER: '覆核',
+        USER: '授權經辦',
+        ADMIN: '授權覆核'
+      }
+      const labels = [...new Set(state.currentUser?.roles ?? [])].map((role) => roleLabels[role] ?? role)
       return labels?.join('、') || '尚未取得權限'
     }
   },
@@ -29,6 +33,13 @@ export const useAuthStore = defineStore('auth', {
     hasRole(role: 'MAKER' | 'REVIEWER' | 'USER' | 'ADMIN') {
       if (!this.initialized) return false
       return !this.securityRequired || (this.currentUser?.roles.includes(role) ?? false)
+    },
+    hasAnyRole(roles: Array<'MAKER' | 'REVIEWER' | 'USER' | 'ADMIN'>) {
+      return roles.some((role) => this.hasRole(role))
+    },
+    hasFunction(functionCode: string) {
+      if (!this.initialized) return false
+      return !this.securityRequired || (this.currentUser?.functionCodes?.includes(functionCode) ?? false)
     },
     async initialize() {
       if (this.initialized) return this.currentUser
@@ -54,7 +65,7 @@ export const useAuthStore = defineStore('auth', {
         this.currentUser = await workflow.run(() => findCurrentUser())
         this.securityRequired = this.currentUser.securityEnabled
         this.initialized = true
-        workflow.setMessage(`歡迎 ${this.currentUser.username}`)
+        workflow.setMessage(`歡迎 ${this.currentUser.userId}`)
         return this.currentUser
       } catch (error) {
         clearBasicCredentials()

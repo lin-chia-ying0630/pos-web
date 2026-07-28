@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import StatusMessage from './StatusMessage.vue'
-import { useWorkflowStore } from '../stores/workflowStore'
+import StatusMessage from '../StatusMessage.vue'
+import { useWorkflowStore } from '../../stores/workflowStore'
 
 const meta = {
   title: 'Components/StatusMessage',

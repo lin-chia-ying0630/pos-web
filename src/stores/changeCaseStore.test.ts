@@ -20,7 +20,7 @@ describe('changeCaseStore', () => {
     await store.loadDetail(store.changeCases[0]!)
 
     expect(store.changeCases).toHaveLength(2)
-    expect(store.reviewDetail?.changeFields[0]?.changeField).toBe('full_width_address')
+    expect(store.reviewDetail?.changedFieldNames[0]?.changedFieldName).toBe('full_width_address')
     expect(store.selectedDetailCaseNo).toBe('C1150710001')
   })
 
@@ -31,21 +31,21 @@ describe('changeCaseStore', () => {
     await store.createSelectedCase()
 
     expect(store.changeCase?.changeCaseNo).toBe('C1150710003')
-    expect(store.changeCase?.changeItems).toEqual(['001', '002'])
+    expect(store.changeCase?.changeItemCodes).toEqual(['001', '002'])
   })
 
   it('does not create a case when the latest same item is pending', async () => {
     server.use(
-      http.get('/api/policies/:policyNo/:policySeq/change-items/:changeItem/eligibility', ({ params }) =>
+      http.get('/api/policies/:policyNo/:policySeq/change-items/:changeItemCode/eligibility', ({ params }) =>
         HttpResponse.json({
           success: true,
           message: '查詢成功',
-          massageCode: 'SUCCESS',
+          messageCode: 'SUCCESS',
           errorMessage: '',
           data: {
             policyNo: String(params.policyNo),
             policySeq: Number(params.policySeq),
-            changeItem: String(params.changeItem),
+            changeItemCode: String(params.changeItemCode),
             eligible: false,
             latestChangeCaseNo: 'C1150718001',
             latestAcceptanceStatus: 'P',

@@ -4,7 +4,7 @@ import { getAuthorizationHeader } from './authSession'
 export type ResponseBodyDto<T> = {
   success: boolean
   message: string
-  massageCode: string
+  messageCode: string
   errorMessage: string
   data: T
 }

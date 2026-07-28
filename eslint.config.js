@@ -33,6 +33,9 @@ export default tseslint.config(
       'vue/max-attributes-per-line': 'off',
       'vue/singleline-html-element-content-newline': 'off',
       'vue/html-self-closing': 'off',
+      // Prettier is the single formatter; these two stylistic rules otherwise rewrite its stable output.
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/html-indent': 'off',
       '@typescript-eslint/no-explicit-any': 'warn'
     }
   }

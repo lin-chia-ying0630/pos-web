@@ -6,8 +6,8 @@
     </div>
     <div class="review-query">
       <label>
-        <span>保單號碼</span>
-        <input v-model.trim="reviewQuery.policyNo" maxlength="10" placeholder="P000000001" />
+        <span>{{ chtLabel('policyNo') }}</span>
+        <input v-model.trim="reviewQuery.policyNo" :maxlength="POLICY_NO_MAX_LENGTH" placeholder="P000000001" />
       </label>
       <button class="primary-button" :disabled="workflow.loading || !reviewQuery.policyNo" @click="loadChangeCases">
         <Search :size="18" />
@@ -15,33 +15,53 @@
       </button>
     </div>
 
-    <div v-if="changeCaseStore.changeCases.length > 0" class="case-table">
-      <div class="case-table-head">
-        <span>案號</span>
-        <span>序號</span>
-        <span>變更項目</span>
-        <span>狀態</span>
-        <span>新增人員</span>
-        <span>新增時間</span>
-        <span>異動人員</span>
-        <span>異動時間</span>
-        <span>覆核人員</span>
-        <span>覆核時間</span>
-        <span>檢視</span>
+    <div
+      v-if="changeCaseStore.changeCases.length > 0"
+      class="case-table change-case-table"
+      :class="approveMode ? 'approve-case-table' : 'query-case-table'"
+    >
+      <div class="case-table-head" :style="changeCaseGridStyle">
+        <span v-for="key in changeCaseColumnKeys" :key="key">{{ chtLabel(key) }}</span>
+        <template v-if="approveMode">
+          <span>{{ chtLabel('operation') }}</span>
+        </template>
+        <template v-else>
+          <span>{{ chtLabel('changedFieldNames') }}</span>
+          <span>{{ chtLabel('changedRecordTypes') }}</span>
+        </template>
       </div>
-      <template v-for="caseItem in changeCaseStore.changeCases" :key="caseItem.changeCaseNo">
-        <div class="case-table-row">
-          <strong>{{ caseItem.changeCaseNo }}</strong>
-          <span>{{ caseItem.policySeq }}</span>
-          <span>{{ caseItem.changeItemDescriptions || caseItem.changeItems || '-' }}</span>
-          <span>{{ statusDisplay(caseItem) }}</span>
-          <span>{{ auditValue(caseItem.createdBy) }}</span>
-          <span>{{ dateValue(caseItem.createdAt) }}</span>
-          <span>{{ auditValue(caseItem.updatedBy) }}</span>
-          <span>{{ dateValue(caseItem.updatedAt) }}</span>
-          <span>{{ auditValue(caseItem.reviewedBy) }}</span>
-          <span>{{ dateValue(caseItem.reviewedAt) }}</span>
-          <div class="case-actions">
+      <template v-for="caseItem in pagedChangeCases" :key="caseItem.changeCaseNo">
+        <div class="case-table-row" :style="changeCaseGridStyle">
+          <span v-for="key in changeCaseColumnKeys" :key="key">
+            {{ displayChangeCaseValue(caseItem, key) }}
+          </span>
+          <template v-if="!approveMode">
+            <span class="query-view-action">
+              <button
+                class="icon-button"
+                :class="{ viewed: viewedFields.has(caseItem.changeCaseNo) }"
+                type="button"
+                title="查看異動欄位"
+                aria-label="查看異動欄位"
+                @click="openDetail(caseItem, 'fields')"
+              >
+                <Eye :size="18" />
+              </button>
+            </span>
+            <span class="query-view-action">
+              <button
+                class="icon-button"
+                :class="{ viewed: viewedFiles.has(caseItem.changeCaseNo) }"
+                type="button"
+                title="查看異動檔案"
+                aria-label="查看異動檔案"
+                @click="openDetail(caseItem, 'files')"
+              >
+                <Eye :size="18" />
+              </button>
+            </span>
+          </template>
+          <div v-else class="case-actions">
             <button
               class="icon-button"
               :class="{ viewed: viewedFields.has(caseItem.changeCaseNo) }"
@@ -62,7 +82,7 @@
             >
               <Eye :size="18" />
             </button>
-            <template v-if="approveMode && isPendingStatus(caseItem.acceptanceStatus)">
+            <template v-if="isPendingStatus(caseItem.acceptanceStatus)">
               <button
                 class="icon-button danger-action"
                 type="button"
@@ -89,6 +109,14 @@
       </template>
     </div>
     <p v-else-if="changeCaseStore.reviewSearched" class="empty-text">查無保全受理資料</p>
+    <PaginationBar
+      :page="currentPage"
+      :total-pages="totalPages"
+      :total-items="changeCaseStore.changeCases.length"
+      :page-size="PAGE_SIZE"
+      aria-label="保全受理資料分頁"
+      @change="changePage"
+    />
 
     <ChangeCaseDetailPanel
       v-if="detailMode && selectedCase && changeCaseStore.reviewDetail"
@@ -96,26 +124,45 @@
       :view-mode="detailMode"
       @close="closeDetail"
     />
+    <ConfirmActionDialog
+      v-if="pendingConfirm"
+      :title="pendingConfirm.status === 'S' ? '確認完成' : '確認取消'"
+      :subtitle="pendingConfirm.caseItem.changeCaseNo"
+      :description="
+        pendingConfirm.status === 'S'
+          ? '確定要完成此案件並套用所有異動？此操作不可還原。'
+          : '確定要取消此案件？此操作不可還原。'
+      "
+      :confirm-label="pendingConfirm.status === 'S' ? '確認完成' : '確認取消'"
+      :confirm-class="pendingConfirm.status === 'C' ? 'danger-button' : ''"
+      @confirm="executeConfirm"
+      @cancel="cancelConfirm"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { Check, Eye, FileText, Search, X } from '@lucide/vue'
 import type { PolicyChangeCase } from '../api/posChange'
 import { useChangeCaseStore } from '../stores/changeCaseStore'
 import { usePolicyStore } from '../stores/policyStore'
 import { useWorkflowStore } from '../stores/workflowStore'
-import { isPendingStatus } from '../utils/format'
+import { isPendingStatus, formatDateTime } from '../utils/format'
+import { POLICY_NO_MAX_LENGTH } from '../domain/domainConstraints'
 import ChangeCaseDetailPanel from './ChangeCaseDetailPanel.vue'
+import PaginationBar from './PaginationBar.vue'
+import { useChtFieldNames } from '../composables/useChtFieldNames'
+import ConfirmActionDialog from './ConfirmActionDialog.vue'
 
-defineProps<{
+const { approveMode } = defineProps<{
   approveMode: boolean
 }>()
 
 const changeCaseStore = useChangeCaseStore()
 const policyStore = usePolicyStore()
 const workflow = useWorkflowStore()
+const { label: chtLabel, load: loadChtLabels } = useChtFieldNames()
 const reviewQuery = reactive({
   policyNo: policyStore.lastPolicyNo
 })
@@ -123,11 +170,38 @@ const detailMode = ref<'fields' | 'files' | null>(null)
 const selectedCase = ref<PolicyChangeCase | null>(null)
 const viewedFields = ref(new Set<string>())
 const viewedFiles = ref(new Set<string>())
+const pendingConfirm = ref<{ caseItem: PolicyChangeCase; status: 'S' | 'C' } | null>(null)
+const PAGE_SIZE = 10
+const currentPage = ref(1)
+const totalPages = computed(() => Math.max(1, Math.ceil(changeCaseStore.changeCases.length / PAGE_SIZE)))
+const pagedChangeCases = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return changeCaseStore.changeCases.slice(start, start + PAGE_SIZE)
+})
+// 欄位直接依受理資料 API 的 key 展開；檢視／覆核按鈕是純 UI 欄位，另外附加。
+const changeCaseColumnKeys = computed(() => {
+  const first = pagedChangeCases.value[0] ?? changeCaseStore.changeCases[0]
+  return first ? Object.keys(first) : []
+})
+const changeCaseGridStyle = computed(() => {
+  const count = changeCaseColumnKeys.value.length + (approveMode ? 1 : 2)
+  return {
+    gridTemplateColumns: `repeat(${count}, minmax(150px, 1fr))`,
+    minWidth: `${count * 150}px`
+  }
+})
+onMounted(loadChtLabels)
 
 function loadChangeCases() {
+  currentPage.value = 1
   viewedFields.value = new Set()
   viewedFiles.value = new Set()
   return changeCaseStore.loadChangeCases(reviewQuery.policyNo)
+}
+
+function changePage(page: number) {
+  currentPage.value = Math.min(Math.max(page, 1), totalPages.value)
+  closeDetail()
 }
 
 async function openDetail(caseItem: PolicyChangeCase, mode: 'fields' | 'files') {
@@ -151,11 +225,20 @@ function reviewReady(changeCaseNo: string) {
   return viewedFields.value.has(changeCaseNo) && viewedFiles.value.has(changeCaseNo)
 }
 
-async function confirmStatus(caseItem: PolicyChangeCase, acceptanceStatus: 'C' | 'S') {
+function confirmStatus(caseItem: PolicyChangeCase, acceptanceStatus: 'C' | 'S') {
   if (!reviewReady(caseItem.changeCaseNo)) return
-  const action = acceptanceStatus === 'S' ? '完成並套用以上異動' : '取消案件且不套用異動'
-  if (!window.confirm(`確定要將 ${caseItem.changeCaseNo} ${action}？`)) return
-  await changeCaseStore.updateStatus(caseItem, acceptanceStatus)
+  pendingConfirm.value = { caseItem, status: acceptanceStatus }
+}
+
+async function executeConfirm() {
+  if (!pendingConfirm.value) return
+  const { caseItem, status } = pendingConfirm.value
+  pendingConfirm.value = null
+  await changeCaseStore.updateStatus(caseItem, status)
+}
+
+function cancelConfirm() {
+  pendingConfirm.value = null
 }
 
 function statusDisplay(caseItem: PolicyChangeCase) {
@@ -164,11 +247,12 @@ function statusDisplay(caseItem: PolicyChangeCase) {
     : caseItem.acceptanceStatus
 }
 
-function auditValue(value: string | null | undefined) {
-  return value || '-'
-}
-
-function dateValue(value: string | null | undefined) {
-  return value ? value.replace('T', ' ').slice(0, 19) : '-'
+function displayChangeCaseValue(caseItem: PolicyChangeCase, key: string) {
+  const value = (caseItem as unknown as Record<string, unknown>)[key]
+  if (key === 'acceptanceStatus') return statusDisplay(caseItem)
+  if (key.endsWith('At')) return formatDateTime(value == null ? null : String(value))
+  if (value == null || value === '') return '-'
+  if (Array.isArray(value)) return value.join('、') || '-'
+  return typeof value === 'object' ? JSON.stringify(value) : String(value)
 }
 </script>

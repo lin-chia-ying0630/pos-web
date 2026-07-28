@@ -9,7 +9,7 @@ function responseBody(data: unknown) {
   return {
     success: true,
     message: '執行成功',
-    massageCode: '',
+    messageCode: '',
     errorMessage: '',
     data
   }
@@ -37,13 +37,13 @@ describe('authStore', () => {
     server.use(
       http.get('/api/auth/me', ({ request }) => {
         if (request.headers.get('Authorization') === `Basic ${window.btoa('reviewer:reviewer-secret')}`) {
-          return HttpResponse.json(responseBody({ username: 'reviewer', roles: ['REVIEWER'], securityEnabled: true }))
+          return HttpResponse.json(responseBody({ userId: 'reviewer', roles: ['REVIEWER'], securityEnabled: true }))
         }
         return HttpResponse.json(
           {
             success: false,
             message: '',
-            massageCode: '',
+            messageCode: '',
             errorMessage: '尚未登入或帳號密碼錯誤',
             data: null
           },
@@ -63,5 +63,28 @@ describe('authStore', () => {
     expect(store.roleDescription).toBe('覆核')
     expect(store.hasRole('MAKER')).toBe(false)
     expect(store.hasRole('REVIEWER')).toBe(true)
+  })
+
+  it('combines more than two roles for the same user', async () => {
+    server.use(
+      http.get('/api/auth/me', () =>
+        HttpResponse.json(
+          responseBody({
+            userId: 'multi-role-user',
+            roles: ['MAKER', 'REVIEWER', 'ADMIN'],
+            securityEnabled: true
+          })
+        )
+      )
+    )
+    const store = useAuthStore()
+
+    await store.initialize()
+
+    expect(store.roleDescription).toBe('經辦、覆核、授權覆核')
+    expect(store.hasRole('MAKER')).toBe(true)
+    expect(store.hasRole('REVIEWER')).toBe(true)
+    expect(store.hasRole('ADMIN')).toBe(true)
+    expect(store.hasAnyRole(['USER', 'ADMIN'])).toBe(true)
   })
 })

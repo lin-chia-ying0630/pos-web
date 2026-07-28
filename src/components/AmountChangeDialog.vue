@@ -13,65 +13,65 @@
           <h3>{{ amountStore.amountDialogSubtitle }}</h3>
           <div v-if="amountStore.amountDialogType === 'main'" class="form-grid">
             <label>
-              <span>保單號碼</span>
+              <span>{{ chtLabel('policyNo') }}</span>
               <input :value="policyStore.policyDetail?.master.policyNo ?? '-'" disabled />
             </label>
             <label>
-              <span>序號</span>
+              <span>{{ chtLabel('policySeq') }}</span>
               <input :value="policyStore.policyDetail?.master.policySeq ?? '-'" disabled />
             </label>
             <label>
-              <span>主約險種</span>
+              <span>{{ chtLabel('productCode') }}</span>
               <input :value="mainRide?.productCode ?? '-'" disabled />
             </label>
             <label>
-              <span>主約年期</span>
-              <input :value="mainRide?.policyYears ?? '-'" disabled />
+              <span>{{ chtLabel('coverageTermYears') }}</span>
+              <input :value="mainRide?.coverageTermYears ?? '-'" disabled />
             </label>
             <label>
-              <span>目前保額</span>
+              <span>{{ chtLabel('insuredAmount') }}</span>
               <input :value="formatNumber(mainRide?.insuredAmount ?? 0, 2)" disabled />
             </label>
             <label>
-              <span>變更後保額</span>
+              <span>{{ chtLabel('insuredAmount') }}</span>
               <input v-model.number="amountStore.amountForm.insuredAmount" type="number" min="0" step="0.01" />
             </label>
             <label>
-              <span>總保費</span>
-              <input :value="formatNumber(policyStore.policyDetail?.master.premium ?? 0, 4)" disabled />
+              <span>{{ chtLabel('premiumAmount') }}</span>
+              <input :value="formatNumber(policyStore.policyDetail?.master.premiumAmount ?? 0, 4)" disabled />
             </label>
           </div>
 
           <div v-else class="amount-table">
-            <div v-for="ride in amountStore.amountForm.rides" :key="ride.rideOrder" class="amount-table-row">
+            <div v-for="ride in visibleRiderCoverages" :key="ride.coverageItemSeq" class="amount-table-row">
               <div class="form-grid">
                 <label>
-                  <span>附約序號</span>
-                  <input :value="ride.rideOrder" disabled />
+                  <span>{{ chtLabel('coverageItemSeq') }}</span>
+                  <input :value="ride.coverageItemSeq" disabled />
                 </label>
                 <label>
-                  <span>附約型態</span>
-                  <input :value="ride.rideType" disabled />
+                  <span>{{ chtLabel('coverageItemType') }}</span>
+                  <input :value="ride.coverageItemType" disabled />
                 </label>
                 <label>
-                  <span>險種</span>
+                  <span>{{ chtLabel('productCode') }}</span>
                   <input :value="ride.productCode" disabled />
                 </label>
                 <label>
-                  <span>年期</span>
-                  <input :value="ride.policyYears" disabled />
+                  <span>{{ chtLabel('coverageTermYears') }}</span>
+                  <input :value="ride.coverageTermYears" disabled />
                 </label>
                 <label>
-                  <span>目前保額</span>
+                  <span>{{ chtLabel('insuredAmount') }}</span>
                   <input :value="formatNumber(ride.currentInsuredAmount, 2)" disabled />
                 </label>
                 <label>
-                  <span>變更後保額</span>
+                  <span>{{ chtLabel('insuredAmount') }}</span>
                   <input v-model.number="ride.insuredAmount" type="number" min="0" step="0.01" />
                 </label>
                 <label>
-                  <span>附約保費</span>
-                  <input :value="formatNumber(ride.premium, 4)" disabled />
+                  <span>{{ chtLabel('premiumAmount') }}</span>
+                  <input :value="formatNumber(ride.premiumAmount, 4)" disabled />
                 </label>
               </div>
             </div>
@@ -95,15 +95,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { Save, X } from '@lucide/vue'
-import { useAmountChangeStore } from '../stores/amountChangeStore'
+import { isRiderCoverage, useAmountChangeStore } from '../stores/amountChangeStore'
 import { usePolicyStore } from '../stores/policyStore'
 import { useWorkflowStore } from '../stores/workflowStore'
 import { formatNumber } from '../utils/format'
+import { useChtFieldNames } from '../composables/useChtFieldNames'
 
 const amountStore = useAmountChangeStore()
 const policyStore = usePolicyStore()
 const workflow = useWorkflowStore()
-const mainRide = computed(() => policyStore.policyDetail?.rideList.find((ride) => ride.rideOrder === '000'))
+const { label: chtLabel, load } = useChtFieldNames()
+const mainRide = computed(() => policyStore.policyDetail?.rideList.find((ride) => ride.coverageItemSeq === '000'))
+// 渲染層保留相同業務防護，避免熱更新或舊頁面狀態殘留 BASE/000 主約。
+const visibleRiderCoverages = computed(() => amountStore.amountForm.rides.filter(isRiderCoverage))
+onMounted(load)
 </script>

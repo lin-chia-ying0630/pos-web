@@ -7,7 +7,7 @@ function envelope<T>(data: T) {
   return {
     success: true,
     message: '執行成功',
-    massageCode: '',
+    messageCode: '',
     errorMessage: '',
     data
   }
@@ -33,7 +33,7 @@ async function mockApi(page: Page) {
       return json(route, mockPolicyDetail)
     }
     if (request.method() === 'POST' && url.pathname === '/api/change-cases') {
-      const body = request.postDataJSON() as { changeItems: string[] }
+      const body = request.postDataJSON() as { changeItemCodes: string[] }
       return json(
         route,
         {
@@ -41,16 +41,16 @@ async function mockApi(page: Page) {
           policySeq: 1,
           changeCaseNo,
           acceptanceStatus: 'P',
-          changeItems: body.changeItems
+          changeItemCodes: body.changeItemCodes
         },
         201
       )
     }
     if (request.method() === 'POST' && url.pathname === `/api/change-cases/${changeCaseNo}/address-change`) {
-      return json(route, { changeCaseNo, changeItem: '001', changedFieldCount: 1 })
+      return json(route, { changeCaseNo, changeItemCode: '001', changedFieldCount: 1 })
     }
     if (request.method() === 'POST' && url.pathname === `/api/change-cases/${changeCaseNo}/main-amount-change`) {
-      return json(route, { changeCaseNo, changeItem: '002', changedFieldCount: 1 })
+      return json(route, { changeCaseNo, changeItemCode: '002', changedFieldCount: 1 })
     }
     if (request.method() === 'GET' && url.pathname === '/api/policies/P000000001/change-cases') {
       return json(route, [
@@ -60,8 +60,8 @@ async function mockApi(page: Page) {
           changeCaseNo,
           acceptanceStatus,
           acceptanceStatusDescription: acceptanceStatus === 'P' ? '受理中' : '完成',
-          changeItems: '001,002',
-          changeItemDescriptions: '地址變更,主約保額變更'
+          changeItemCodes: '001,002',
+          changeItemCodeDescriptions: '地址變更,主約保額變更'
         }
       ])
     }
@@ -161,7 +161,7 @@ test('redirects to login and shows the authenticated role when backend security 
         body: JSON.stringify({
           success: false,
           message: '',
-          massageCode: '',
+          messageCode: '',
           errorMessage: '尚未登入或帳號密碼錯誤',
           data: null
         })

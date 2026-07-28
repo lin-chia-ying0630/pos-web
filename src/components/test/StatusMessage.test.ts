@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import StatusMessage from './StatusMessage.vue'
-import { useWorkflowStore } from '../stores/workflowStore'
+import StatusMessage from '../StatusMessage.vue'
+import { useWorkflowStore } from '../../stores/workflowStore'
 
 describe('StatusMessage', () => {
   it('renders success message from store', () => {

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import AddressChangeDialog from './AddressChangeDialog.vue'
-import { useAddressChangeStore } from '../stores/addressChangeStore'
-import { useChangeCaseStore } from '../stores/changeCaseStore'
-import { usePolicyStore } from '../stores/policyStore'
-import { mockPolicyDetail } from '../stories/mockData'
+import AddressChangeDialog from '../AddressChangeDialog.vue'
+import { useAddressChangeStore } from '../../stores/addressChangeStore'
+import { useChangeCaseStore } from '../../stores/changeCaseStore'
+import { usePolicyStore } from '../../stores/policyStore'
+import { mockPolicyDetail } from '../../stories/mockData'
 
 const meta = {
   title: 'Components/AddressChangeDialog',
@@ -13,7 +13,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-function openDialog(addressType: string, dialogMessage = '') {
+function openDialog(addressTypeCode: string, dialogMessage = '') {
   const policyStore = usePolicyStore()
   const changeCaseStore = useChangeCaseStore()
   const addressStore = useAddressChangeStore()
@@ -24,16 +24,16 @@ function openDialog(addressType: string, dialogMessage = '') {
       policySeq: 1,
       changeCaseNo: 'C1150712001',
       acceptanceStatus: 'P',
-      changeItems: ['001']
+      changeItemCodes: ['001']
     }
   })
   addressStore.$patch({
-    selectedAddressType: addressType,
+    selectedAddressType: addressTypeCode,
     addressDialogOpen: true,
     dialogMessage
   })
   const address =
-    addressStore.availableAddresses.find((item) => item.addressType === addressType) ??
+    addressStore.availableAddresses.find((item) => item.addressTypeCode === addressTypeCode) ??
     addressStore.availableAddresses[0]
   if (address) addressStore.selectAddress(address)
   if (dialogMessage) addressStore.dialogMessage = dialogMessage

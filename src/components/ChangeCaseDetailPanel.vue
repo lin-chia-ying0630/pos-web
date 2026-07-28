@@ -11,93 +11,97 @@
         </button>
       </header>
 
-      <div class="change-detail-heading">
-        <span>{{ detail.changeCase.changeItemDescriptions || detail.changeCase.changeItems }}</span>
-      </div>
+      <div class="dialog-body">
+        <div class="change-detail-heading">
+          <span>{{ detail.changeCase.changeItemCodeDescriptions || detail.changeCase.changeItemCodes }}</span>
+        </div>
 
-      <div v-if="viewMode === 'fields' && changeFieldGroups.length" class="change-field-groups">
-        <section v-for="group in changeFieldGroups" :key="group.changeItem" class="change-field-group">
-          <h4>變更項目 {{ group.changeItem }}</h4>
-          <div class="change-detail-table">
-            <div class="change-detail-row change-detail-head">
-              <span>欄位</span>
-              <span>Key</span>
-              <span>異動前</span>
-              <span>異動後</span>
-            </div>
-            <div v-for="field in group.displayFields" :key="field.id" class="change-detail-row">
-              <span class="snapshot-field-name">
-                <strong>{{ field.displayName }}</strong>
-                <small>{{ field.changeField }}</small>
-              </span>
-              <span>{{ field.displayKey }}</span>
-              <span>{{ displayValue(field.contentBefore) }}</span>
-              <strong>{{ displayValue(field.contentAfter) }}</strong>
-            </div>
-          </div>
-        </section>
-      </div>
-      <p v-else-if="viewMode === 'fields'" class="empty-text">此案件沒有異動欄位</p>
+        <div v-if="viewMode === 'fields' && changedFieldNameGroups.length" class="change-field-groups">
+          <section v-for="group in changedFieldNameGroups" :key="group.changeItemCode" class="change-field-group">
+            <h4>變更項目 {{ group.changeItemCode }}</h4>
+            <ReviewFieldComparisonTable :fields="group.displayFields" />
+          </section>
+        </div>
+        <p v-else-if="viewMode === 'fields'" class="empty-text">此案件沒有異動欄位</p>
 
-      <div v-if="viewMode === 'files' && detail.changeFiles.length" class="snapshot-list">
-        <div v-for="file in detail.changeFiles" :key="file.id" class="snapshot-item">
-          <div class="snapshot-title">
-            <strong>{{ file.changeItem }} {{ file.changeFile }}</strong>
-            <span>Key: {{ file.changeKey || '-' }}</span>
-          </div>
-          <div class="snapshot-field-table">
-            <div class="snapshot-field-row snapshot-field-head">
-              <span>中文名稱</span>
-              <span>異動前</span>
-              <span>異動後</span>
+        <div v-if="viewMode === 'files' && detail.changedRecordTypes.length" class="snapshot-list">
+          <div v-for="file in detail.changedRecordTypes" :key="file.id" class="snapshot-item">
+            <div class="snapshot-title">
+              <strong>{{ file.changeItemCode }} {{ file.changedRecordType }}</strong>
+              <span>Key: {{ file.changedRecordKey || '-' }}</span>
             </div>
-            <div v-for="field in file.snapshotFields" :key="field.jsonKey" class="snapshot-field-row">
-              <span class="snapshot-field-name">
-                <strong>{{ field.chineseName }}</strong>
-                <small>{{ field.jsonKey }}</small>
-              </span>
-              <span>{{ displayValue(field.contentBefore) }}</span>
-              <strong>{{ displayValue(field.contentAfter) }}</strong>
+            <div class="snapshot-field-table">
+              <div class="snapshot-field-row snapshot-field-head">
+                <span>{{ chtLabel('fieldName') }}</span>
+                <span>{{ chtLabel('contentBefore') }}</span>
+                <span>{{ chtLabel('contentAfter') }}</span>
+              </div>
+              <div v-for="field in file.snapshotFields" :key="field.jsonKey" class="snapshot-field-row">
+                <span class="snapshot-field-name">
+                  <strong>{{ field.chineseName }}</strong>
+                  <small>{{ field.jsonKey }}</small>
+                </span>
+                <span>{{ displayValue(field.contentBefore) }}</span>
+                <strong>{{ displayValue(field.contentAfter) }}</strong>
+              </div>
             </div>
           </div>
         </div>
+        <p v-else-if="viewMode === 'files'" class="empty-text">此案件沒有異動檔案</p>
       </div>
-      <p v-else-if="viewMode === 'files'" class="empty-text">此案件沒有異動檔案</p>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { X } from '@lucide/vue'
 import type { PolicyChangeCaseDetail } from '../api/posChange'
+import ReviewFieldComparisonTable, { type ReviewComparisonField } from './ReviewFieldComparisonTable.vue'
+import { useChtFieldNames } from '../composables/useChtFieldNames'
 
 const props = defineProps<{
   detail: PolicyChangeCaseDetail
   viewMode: 'fields' | 'files'
 }>()
+const { label: chtLabel, load } = useChtFieldNames()
+onMounted(load)
 
-const changeFieldGroups = computed(() => {
-  const groups = new Map<string, PolicyChangeCaseDetail['changeFields']>()
-  props.detail.changeFields.forEach((field) => {
-    const fields = groups.get(field.changeItem) ?? []
+const changedFieldNameGroups = computed(() => {
+  const groups = new Map<string, PolicyChangeCaseDetail['changedFieldNames']>()
+  props.detail.changedFieldNames.forEach((field) => {
+    const fields = groups.get(field.changeItemCode) ?? []
     fields.push(field)
-    groups.set(field.changeItem, fields)
+    groups.set(field.changeItemCode, fields)
   })
-  return Array.from(groups, ([changeItem, fields]) => {
-    if (changeItem === '002') {
+  return Array.from(groups, ([changeItemCode, fields]) => {
+    if (changeItemCode === '002') {
       const representative = fields[0]
       return {
-        changeItem,
-        displayFields: representative ? [{ ...representative, displayName: '主約保額', displayKey: '-' }] : []
+        changeItemCode,
+        displayFields: representative
+          ? [
+              {
+                id: representative.id,
+                label: '主約保額',
+                fieldKey: representative.changedFieldName,
+                recordKey: '-',
+                before: representative.contentBefore,
+                after: representative.contentAfter
+              }
+            ]
+          : []
       }
     }
     return {
-      changeItem,
-      displayFields: fields.map((field) => ({
-        ...field,
-        displayName: field.chineseName || field.changeField,
-        displayKey: field.changeKey || '-'
+      changeItemCode,
+      displayFields: fields.map<ReviewComparisonField>((field) => ({
+        id: field.id,
+        label: field.chineseName || field.changedFieldName,
+        fieldKey: field.changedFieldName,
+        recordKey: field.changedRecordKey || '-',
+        before: field.contentBefore,
+        after: field.contentAfter
       }))
     }
   })

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import ChangeCaseListPanel from './ChangeCaseListPanel.vue'
-import { useChangeCaseStore } from '../stores/changeCaseStore'
-import { usePolicyStore } from '../stores/policyStore'
-import { mockChangeCases } from '../stories/mockData'
+import ChangeCaseListPanel from '../ChangeCaseListPanel.vue'
+import { useChangeCaseStore } from '../../stores/changeCaseStore'
+import { usePolicyStore } from '../../stores/policyStore'
+import { mockChangeCases } from '../../stories/mockData'
 
 const meta = {
   title: 'Components/ChangeCaseListPanel',

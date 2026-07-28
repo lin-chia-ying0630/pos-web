@@ -6,17 +6,9 @@
         <h2>保單主檔</h2>
       </div>
       <dl class="data-grid">
-        <div>
-          <dt>保單號碼</dt>
-          <dd>{{ policyStore.policyDetail.master.policyNo }}</dd>
-        </div>
-        <div>
-          <dt>序號</dt>
-          <dd>{{ policyStore.policyDetail.master.policySeq }}</dd>
-        </div>
-        <div>
-          <dt>總保費</dt>
-          <dd>{{ formatNumber(policyStore.policyDetail.master.premium, 4) }}</dd>
+        <div v-for="[key, value] in masterFields" :key="key">
+          <dt>{{ chtLabel(key) }}</dt>
+          <dd>{{ displayValue(key, value) }}</dd>
         </div>
       </dl>
     </article>
@@ -27,21 +19,9 @@
         <h2>通訊地址</h2>
       </div>
       <dl class="data-grid address-grid">
-        <div>
-          <dt>郵遞區號</dt>
-          <dd>{{ policyStore.communicationZip }}</dd>
-        </div>
-        <div>
-          <dt>地址型態</dt>
-          <dd>01 {{ policyStore.addressTypeLabel('01') }}</dd>
-        </div>
-        <div class="wide">
-          <dt>地址</dt>
-          <dd>{{ policyStore.policyDetail.communicationAddress?.fullWidthAddress || '-' }}</dd>
-        </div>
-        <div class="wide">
-          <dt>email / 電話 / 手機</dt>
-          <dd>{{ policyStore.policyDetail.communicationAddress?.halfWidthAddress || '-' }}</dd>
+        <div v-for="[key, value] in communicationAddressFields" :key="key" :class="{ wide: key === 'addressText' }">
+          <dt>{{ chtLabel(key) }}</dt>
+          <dd>{{ displayAddressValue(key, value) }}</dd>
         </div>
       </dl>
     </article>
@@ -50,8 +30,32 @@
 
 <script setup lang="ts">
 import { FileText, MapPinned } from '@lucide/vue'
+import { computed, onMounted } from 'vue'
+import { isPolicyServiceHiddenField } from '../composables/usePolicyUiFields'
+import { useChtFieldNames } from '../composables/useChtFieldNames'
 import { usePolicyStore } from '../stores/policyStore'
 import { formatNumber } from '../utils/format'
 
 const policyStore = usePolicyStore()
+const { label: chtLabel, load } = useChtFieldNames()
+const masterFields = computed(() =>
+  Object.entries(policyStore.policyDetail?.master ?? {}).filter(([key]) => !isPolicyServiceHiddenField(key))
+)
+const communicationAddressFields = computed(() =>
+  Object.entries(policyStore.policyDetail?.communicationAddress ?? {}).filter(
+    ([key]) => !isPolicyServiceHiddenField(key)
+  )
+)
+onMounted(load)
+
+function displayValue(key: string, value: unknown) {
+  if (value == null || value === '') return '-'
+  if (typeof value === 'number') return formatNumber(value, key === 'premiumAmount' ? 4 : 0)
+  return String(value)
+}
+function displayAddressValue(key: string, value: unknown) {
+  if (value == null || value === '') return '-'
+  if (key === 'addressTypeCode') return `${value} ${policyStore.addressTypeCodeLabel(String(value))}`
+  return String(value)
+}
 </script>

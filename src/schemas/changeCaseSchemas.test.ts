@@ -10,39 +10,36 @@ import {
 describe('change case schemas', () => {
   it('accepts physical address with 3+3 postal code', () => {
     const result = addressChangeSchema.safeParse({
-      addressType: '01',
-      zipCode3: '104',
-      zipCode2: '001',
-      fullWidthAddress: '臺北市中山區南京東路二段 1 號',
+      addressTypeCode: '01',
+      postalCode: '104001',
+      addressText: '臺北市中山區南京東路二段 1 號',
       halfWidthAddress: ''
     })
 
     expect(result.success).toBe(true)
   })
 
-  it('accepts physical address with blank zipCode2', () => {
+  it('accepts three digit postal code', () => {
     const result = addressChangeSchema.safeParse({
-      addressType: '02',
-      zipCode3: '104',
-      zipCode2: '',
-      fullWidthAddress: '臺北市中山區南京東路二段 1 號',
+      addressTypeCode: '02',
+      postalCode: '104',
+      addressText: '臺北市中山區南京東路二段 1 號',
       halfWidthAddress: ''
     })
 
     expect(result.success).toBe(true)
   })
 
-  it('requires contact value for non physical address type', () => {
+  it('rejects invalid postal code', () => {
     const result = addressChangeSchema.safeParse({
-      addressType: '31',
-      zipCode3: '',
-      zipCode2: '',
-      fullWidthAddress: '',
+      addressTypeCode: '01',
+      postalCode: '',
+      addressText: '',
       halfWidthAddress: ''
     })
 
     expect(result.success).toBe(false)
-    expect(firstSchemaMessage(result)).toBe('email / 電話 / 手機不可空白')
+    expect(firstSchemaMessage(result)).toBe('郵遞區號必須為 3 或 6 碼數字')
   })
 
   it('requires query policyNo and positive policySeq', () => {
@@ -60,7 +57,7 @@ describe('change case schemas', () => {
   })
 
   it('requires rider order before saving rider amount', () => {
-    const result = riderAmountChangeSchema.safeParse({ rides: [{ rideOrder: '', insuredAmount: 1000 }] })
+    const result = riderAmountChangeSchema.safeParse({ rides: [{ coverageItemSeq: '', insuredAmount: 1000 }] })
 
     expect(result.success).toBe(false)
     expect(firstSchemaMessage(result)).toBe('附約序號不可空白')

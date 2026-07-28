@@ -14,17 +14,20 @@
           <div class="address-table">
             <button
               v-for="address in addressStore.availableAddresses"
-              :key="address.addressType"
+              :key="address.addressTypeCode"
               class="address-row"
-              :class="{ selected: addressStore.selectedAddressType === address.addressType }"
+              :class="{ selected: addressStore.selectedAddressType === address.addressTypeCode }"
               type="button"
               @click="addressStore.selectAddress(address)"
             >
               <span class="address-check">
-                {{ addressStore.selectedAddressType === address.addressType ? 'V' : '' }}
+                {{ addressStore.selectedAddressType === address.addressTypeCode ? 'V' : '' }}
               </span>
               <span>
-                <strong>{{ address.addressType }} {{ addressStore.addressTypeLabel(address.addressType) }}</strong>
+                <strong
+                  >{{ address.addressTypeCode }}
+                  {{ addressStore.addressTypeCodeLabel(address.addressTypeCode) }}</strong
+                >
                 <small>{{ addressStore.addressDisplay(address) }}</small>
               </span>
             </button>
@@ -33,60 +36,35 @@
 
         <div class="form-grid">
           <label>
-            <span>地址型態</span>
+            <span>{{ chtLabel('addressTypeCode') }}</span>
             <input
-              :value="`${addressStore.addressForm.addressType} ${addressStore.addressTypeLabel(addressStore.addressForm.addressType)}`"
+              :value="`${addressStore.addressForm.addressTypeCode} ${addressStore.addressTypeCodeLabel(addressStore.addressForm.addressTypeCode)}`"
               readonly
             />
           </label>
           <label>
-            <span>郵遞區號前 3 碼</span>
+            <span>{{ chtLabel('postalCode') }}</span>
             <input
-              :value="addressStore.addressForm.zipCode3"
+              :value="addressStore.addressForm.postalCode"
               :class="{ invalid: addressStore.postalLookupError }"
               autocomplete="off"
-              :disabled="addressStore.isContactAddressType(addressStore.addressForm.addressType)"
+              :disabled="addressStore.isContactAddressType(addressStore.addressForm.addressTypeCode)"
               inputmode="numeric"
-              maxlength="3"
-              name="pos-zip-code3"
-              placeholder="100"
-              @input="handleZipCode3Input"
-            />
-          </label>
-          <label>
-            <span>郵遞區號後 3 碼</span>
-            <input
-              ref="zipCode2Input"
-              :value="addressStore.addressForm.zipCode2"
-              :class="{ invalid: addressStore.postalLookupError }"
-              autocomplete="off"
-              :disabled="addressStore.isContactAddressType(addressStore.addressForm.addressType)"
-              inputmode="numeric"
-              maxlength="3"
-              name="pos-zip-code2"
-              placeholder="可空白"
-              @input="handleZipCode2Input"
+              maxlength="6"
+              name="postal-code"
+              placeholder="3 或 6 碼"
+              @input="handlePostalCodeInput"
             />
           </label>
           <label class="wide">
-            <span>地址</span>
+            <span>{{ chtLabel('addressText') }}</span>
             <input
               ref="fullWidthAddressInput"
-              v-model.trim="addressStore.addressForm.fullWidthAddress"
+              v-model.trim="addressStore.addressForm.addressText"
               autocomplete="off"
-              :disabled="addressStore.isContactAddressType(addressStore.addressForm.addressType)"
+              :disabled="addressStore.isContactAddressType(addressStore.addressForm.addressTypeCode)"
               maxlength="255"
               placeholder="輸入前 3 碼後帶入縣市區，再補完整地址"
-            />
-          </label>
-          <label class="wide">
-            <span>email / 電話 / 手機</span>
-            <input
-              v-model.trim="addressStore.addressForm.halfWidthAddress"
-              autocomplete="off"
-              :disabled="addressStore.isPhysicalAddressType(addressStore.addressForm.addressType)"
-              maxlength="255"
-              placeholder="輸入 email / 電話 / 手機"
             />
           </label>
         </div>
@@ -108,33 +86,25 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { Save, X } from '@lucide/vue'
 import { useAddressChangeStore } from '../stores/addressChangeStore'
 import { useWorkflowStore } from '../stores/workflowStore'
+import { useChtFieldNames } from '../composables/useChtFieldNames'
 
 const addressStore = useAddressChangeStore()
 const workflow = useWorkflowStore()
-const zipCode2Input = ref<HTMLInputElement | null>(null)
+const { label: chtLabel, load } = useChtFieldNames()
 const fullWidthAddressInput = ref<HTMLInputElement | null>(null)
+onMounted(load)
 
-async function handleZipCode3Input(event: Event) {
+// 郵遞區號在畫面與 API 都使用單一 canonical 欄位；舊欄位由後端相容處理。
+async function handlePostalCodeInput(event: Event) {
   const input = event.target as HTMLInputElement
-  const normalizedZipCode3 = input.value.replace(/\D/g, '').slice(0, 3)
-  input.value = normalizedZipCode3
-  await addressStore.setZipCode3(normalizedZipCode3)
-  if (normalizedZipCode3.length === 3) {
-    await nextTick()
-    zipCode2Input.value?.focus()
-  }
-}
-
-async function handleZipCode2Input(event: Event) {
-  const input = event.target as HTMLInputElement
-  const normalizedZipCode2 = input.value.replace(/\D/g, '').slice(0, 3)
-  input.value = normalizedZipCode2
-  await addressStore.setZipCode2(normalizedZipCode2)
-  if (normalizedZipCode2.length === 3) {
+  const normalizedPostalCode = input.value.replace(/\D/g, '').slice(0, 6)
+  input.value = normalizedPostalCode
+  await addressStore.setPostalCode(normalizedPostalCode)
+  if (normalizedPostalCode.length === 3 || normalizedPostalCode.length === 6) {
     await nextTick()
     fullWidthAddressInput.value?.focus()
   }

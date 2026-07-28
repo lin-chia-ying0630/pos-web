@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import ChangeItemActions from './ChangeItemActions.vue'
-import { useChangeCaseStore } from '../stores/changeCaseStore'
-import { usePolicyStore } from '../stores/policyStore'
-import { mockPolicyDetail } from '../stories/mockData'
+import ChangeItemActions from '../ChangeItemActions.vue'
+import { useChangeCaseStore } from '../../stores/changeCaseStore'
+import { usePolicyStore } from '../../stores/policyStore'
+import { mockPolicyDetail } from '../../stories/mockData'
 
 const meta = {
   title: 'Components/ChangeItemActions',
@@ -40,7 +40,7 @@ export const MultipleChangeCaseCreated: Story = {
           policySeq: 1,
           changeCaseNo: 'C1150710001',
           acceptanceStatus: 'P',
-          changeItems: ['001', '002']
+          changeItemCodes: ['001', '002']
         }
       })
       return {}
