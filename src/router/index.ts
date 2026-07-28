@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized, type RouteRecordRaw } from 'vue-router'
 import type { Pinia } from 'pinia'
 import { useAuthStore } from '../stores/authStore'
+import { useWorkflowStore } from '../stores/workflowStore'
 
 export type AppRole = 'MAKER' | 'REVIEWER' | 'USER' | 'ADMIN'
 export type NavigationGroupKey = 'change' | 'policy' | 'code' | 'review' | 'authorization'
@@ -231,6 +232,8 @@ export function firstAuthorizedPath(authStore: ReturnType<typeof useAuthStore>) 
 
 export function installAuthGuard(pinia: Pinia) {
   router.beforeEach(async (to) => {
+    // 訊息屬於產生它的作業頁；切換路由時集中清除，避免上一頁的成功或錯誤訊息殘留。
+    useWorkflowStore(pinia).clearMessage()
     const authStore = useAuthStore(pinia)
     await authStore.initialize()
     if (!authStore.securityRequired) return to.name === 'login' ? firstAuthorizedPath(authStore) : true

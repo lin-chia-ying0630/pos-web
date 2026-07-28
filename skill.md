@@ -298,3 +298,10 @@ docker compose config
 - 所有彈窗必須使用 `DialogShell`；頁面只提供 title、subtitle、內容及 footer，不得重複實作 backdrop、header、close、scroll 與 actions。
 - 所有異動前後比較使用 `ReviewFieldComparisonTable`；不同 API 結構先轉成 `ReviewComparisonField[]`，不得再建立另一套比較表。
 - API 通用值顯示使用 `formatDisplayValue`；空值文字可由參數指定，View 不得重複撰寫空值、陣列與物件格式化邏輯。
+
+## 跨頁作業訊息
+
+- 成功、錯誤與提示訊息統一由 `workflowStore` 管理。
+- 訊息生命週期以目前路由為界，切換畫面時由 Router 共用守衛清除。
+- 頁面元件不可各自複製 `onMounted(clearMessage)`，避免遺漏部分畫面或產生不一致行為。
+- 同一頁重新查詢或送出作業時，仍由 `workflowStore.run` 在開始前清除前一次訊息。

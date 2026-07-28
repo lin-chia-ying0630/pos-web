@@ -323,11 +323,8 @@ stateDiagram-v2
 Pinia 已依責任拆分：
 
 1. `workflowStore`：loading、成功與錯誤訊息。
-2. `authStore`：登入資料與 MAKER / REVIEWER 角色。
-3. `policyStore`：保單查詢、主檔、地址與代碼。
-4. `changeCaseStore`：案號、案件清單、覆核明細與狀態更新。
-5. `addressChangeStore`：001 Dialog、郵遞區號與地址草稿。
-6. `amountChangeStore`：002/003 共用 Dialog 與保額草稿。
+
+作業訊息只屬於產生它的目前頁面。Router 的共用導覽守衛會在每次畫面切換時清除 `workflowStore` 的成功／錯誤訊息，避免查詢保全、保單主檔、地址、主附約或授權頁互相殘留訊息；各頁不得重複撰寫 `onMounted(clearMessage)`。2. `authStore`：登入資料與 MAKER / REVIEWER 角色。3. `policyStore`：保單查詢、主檔、地址與代碼。4. `changeCaseStore`：案號、案件清單、覆核明細與狀態更新。5. `addressChangeStore`：001 Dialog、郵遞區號與地址草稿。6. `amountChangeStore`：002/003 共用 Dialog 與保額草稿。
 
 元件不再依賴單一大型 facade store；跨 Store 的動作只在 action 執行時取得其他 Store，避免模組初始化時互相讀取。
 
